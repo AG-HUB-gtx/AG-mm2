@@ -1,5 +1,5 @@
 -- =============================================
--- AG MM2 - FULL WORKING VERSION (Delta Mobile)
+-- AG MM2 - FULL FIXED VERSION (ESP + Noclip + InfJump)
 -- =============================================
 
 local Players = game:GetService("Players")
@@ -15,7 +15,7 @@ local sg = Instance.new("ScreenGui")
 sg.ResetOnSpawn = false
 sg.Parent = playerGui
 
--- ==================== AG BUTTON ====================
+-- AG Button
 local AGButton = Instance.new("TextButton")
 AGButton.Size = UDim2.new(0, 90, 0, 90)
 AGButton.Position = UDim2.new(0, 20, 0, 100)
@@ -27,10 +27,10 @@ AGButton.Font = Enum.Font.GothamBold
 AGButton.Parent = sg
 Instance.new("UICorner", AGButton).CornerRadius = UDim.new(0, 20)
 
--- ==================== MAIN PANEL ====================
+-- Main Panel
 local MainPanel = Instance.new("Frame")
-MainPanel.Size = UDim2.new(0, 320, 0, 480)
-MainPanel.Position = UDim2.new(0.5, -160, 0.2, 0)
+MainPanel.Size = UDim2.new(0, 320, 0, 520)
+MainPanel.Position = UDim2.new(0.5, -160, 0.15, 0)
 MainPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainPanel.Visible = true
 MainPanel.Parent = sg
@@ -63,7 +63,7 @@ CloseBtn.Parent = TopBar
 AGButton.MouseButton1Click:Connect(function() MainPanel.Visible = not MainPanel.Visible end)
 CloseBtn.MouseButton1Click:Connect(function() MainPanel.Visible = false end)
 
--- Dragging (AG Button + Panel)
+-- Draggable
 local function makeDraggable(obj)
     local dragging = false
     obj.InputBegan:Connect(function(input)
@@ -81,17 +81,98 @@ local function makeDraggable(obj)
 end
 
 makeDraggable(AGButton)
-makeDraggable(TopBar)  -- Drag panel by top bar
+makeDraggable(TopBar)
 
--- ==================== ACTION BUTTONS (Draggable) ====================
+-- ==================== ESP ====================
+local highlights = {}
+local espConn
+
+local function updateESP()
+    for _, hl in pairs(highlights) do if hl and hl.Parent then hl:Destroy() end end
+    highlights = {}
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            local char = plr.Character
+            local color = Color3.fromRGB(0, 255, 0)
+
+            if char:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
+                color = Color3.fromRGB(255, 0, 0)
+            elseif char:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
+                color = Color3.fromRGB(0, 100, 255)
+            elseif char:FindFirstChild("Hero") or plr.Backpack:FindFirstChild("Hero") then
+                color = Color3.fromRGB(255, 255, 0)
+            end
+
+            local hl = Instance.new("Highlight")
+            hl.Adornee = char
+            hl.FillColor = color
+            hl.OutlineColor = color
+            hl.FillTransparency = 0.6
+            hl.OutlineTransparency = 0
+            hl.Parent = char
+            table.insert(highlights, hl)
+        end
+    end
+end
+
+-- ==================== NOCLIP & INF JUMP ====================
+local noclipConn, infJumpConn
+
+local function toggleNoclip(state)
+    if state then
+        noclipConn = RunService.Stepped:Connect(function()
+            local char = player.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        if noclipConn then
+            noclipConn:Disconnect()
+            noclipConn = nil
+        end
+        local char = player.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end
+    end
+end
+
+local function toggleInfJump(state)
+    if state then
+        infJumpConn = UserInputService.JumpRequest:Connect(function()
+            local hum = player.Character and player.Character:FindFirstChild("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if infJumpConn then
+            infJumpConn:Disconnect()
+            infJumpConn = nil
+        end
+    end
+end
+
+-- ==================== ACTION BUTTONS ====================
 local activeButtons = {}
 
 local function createDraggableAction(name, text, callback)
-    if activeButtons[name] then return end
+    if activeButtons[name] then 
+        activeButtons[name].Visible = true 
+        return 
+    end
 
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 260, 0, 85)
-    btn.Position = UDim2.new(0.5, -130, 0.4, 0)
+    btn.Position = UDim2.new(0.5, -130, 0.35, 0)
     btn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
     btn.Text = text
     btn.TextColor3 = Color3.new(1,1,1)
@@ -108,9 +189,7 @@ local function createDraggableAction(name, text, callback)
     activeButtons[name] = btn
 end
 
--- ==================== FEATURES ====================
-
--- Shoot Murder (Targets Murderer)
+-- Button Functions
 local function shootMurder()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player and plr.Character then
@@ -127,7 +206,6 @@ local function shootMurder()
     StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "No Murderer found!", Duration = 4})
 end
 
--- TP to Gun
 local function tpToGun()
     local gun = Workspace:FindFirstChild("GunDrop", true) or Workspace:FindFirstChild("Gun", true)
     if gun and gun:IsA("BasePart") then
@@ -138,7 +216,6 @@ local function tpToGun()
     end
 end
 
--- Kill Random
 local function killRandom()
     local list = {}
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -153,7 +230,7 @@ local function killRandom()
     end
 end
 
--- Toggle Creator
+-- ==================== TOGGLES ====================
 local y = 70
 local function createToggle(name, callback)
     local frame = Instance.new("Frame")
@@ -192,28 +269,37 @@ local function createToggle(name, callback)
     y = y + 75
 end
 
--- ==================== TOGGLES ====================
-createToggle("ESP", function(state) print("ESP:", state) end) -- Add full ESP later if needed
+createToggle("ESP", function(state)
+    if state then
+        updateESP()
+        espConn = RunService.RenderStepped:Connect(updateESP)
+    else
+        if espConn then espConn:Disconnect() end
+        for _, hl in pairs(highlights) do if hl then hl:Destroy() end end
+        highlights = {}
+    end
+end)
+
 createToggle("Shoot Murder Button", function(state)
     if state then createDraggableAction("ShootMurder", "🔫 SHOOT MURDER", shootMurder)
-    elseif activeButtons["ShootMurder"] then activeButtons["ShootMurder"]:Destroy() end
+    elseif activeButtons["ShootMurder"] then activeButtons["ShootMurder"].Visible = false end
 end)
 
 createToggle("TP to Gun Button", function(state)
     if state then createDraggableAction("TpToGun", "🔫 TP TO GUN", tpToGun)
-    elseif activeButtons["TpToGun"] then activeButtons["TpToGun"]:Destroy() end
+    elseif activeButtons["TpToGun"] then activeButtons["TpToGun"].Visible = false end
 end)
 
 createToggle("Kill Random Button", function(state)
     if state then createDraggableAction("KillRandom", "💀 KILL RANDOM", killRandom)
-    elseif activeButtons["KillRandom"] then activeButtons["KillRandom"]:Destroy() end
+    elseif activeButtons["KillRandom"] then activeButtons["KillRandom"].Visible = false end
 end)
 
-createToggle("Inf Jump", function(state) print("Inf Jump:", state) end)
-createToggle("Noclip", function(state) print("Noclip:", state) end)
+createToggle("Inf Jump", toggleInfJump)
+createToggle("Noclip", toggleNoclip)
 
 StarterGui:SetCore("SendNotification", {
     Title = "AG MM2",
-    Text = "Full script loaded! Toggle to spawn draggable buttons.",
+    Text = "Noclip & InfJump Fixed! Toggle them ON",
     Duration = 10
 })
