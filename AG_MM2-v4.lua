@@ -1,5 +1,5 @@
 -- =============================================
--- AG MM2 Script | FIXED Action Buttons + Early ESP + Gun Highlight
+-- AG MM2 Script | FIXED Action Buttons + Mobile Optimized
 -- =============================================
 
 local Players = game:GetService("Players")
@@ -22,11 +22,10 @@ local AG = {
     },
     Connections = {},
     Highlights = {},
-    ActionButtons = {}  -- Will store buttons by name
+    ActionButtons = {}
 }
 
--- ====================== GUI (Same as before) ======================
-
+-- ====================== GUI ======================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AG_MM2_GUI"
 ScreenGui.ResetOnSpawn = false
@@ -36,7 +35,6 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 320, 0, 480)
 MainFrame.Position = UDim2.new(0.5, -160, 0.5, -240)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
@@ -66,7 +64,7 @@ CloseBtn.TextScaled = true
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Parent = TopBar
 
--- Dragging (Panel)
+-- Panel Dragging
 local panelDragging = false
 local panelDragStart, panelStartPos
 
@@ -88,7 +86,7 @@ end)
 TopBar.InputEnded:Connect(function() panelDragging = false end)
 CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
 
--- AG Button (Draggable)
+-- AG Button
 local AGButton = Instance.new("TextButton")
 AGButton.Size = UDim2.new(0, 70, 0, 70)
 AGButton.Position = UDim2.new(0, 20, 0, 20)
@@ -173,19 +171,17 @@ local function createToggle(name, callback)
     yOffset = yOffset + 70
 end
 
--- ====================== ESP (Early + Gun Drop) ======================
+-- ====================== ESP ======================
 local function updateHighlights()
     for _, hl in pairs(AG.Highlights) do if hl and hl.Parent then hl:Destroy() end end
     AG.Highlights = {}
 
     if not AG.Toggles.ESP then return end
 
-    -- Players
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player and plr.Character then
             local char = plr.Character
             local color = Color3.fromRGB(0, 255, 0)
-
             if char:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
                 color = Color3.fromRGB(255, 0, 0)
             elseif char:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
@@ -205,7 +201,6 @@ local function updateHighlights()
         end
     end
 
-    -- Dropped Gun
     local gun = Workspace:FindFirstChild("GunDrop", true) or Workspace:FindFirstChild("Gun", true)
     if gun and gun:IsA("BasePart") then
         local hl = Instance.new("Highlight")
@@ -219,17 +214,15 @@ local function updateHighlights()
     end
 end
 
--- ====================== ACTION BUTTONS (Fixed) ======================
-local function createActionButton(name, text, yScale, callback)
-    if AG.ActionButtons[name] and AG.ActionButtons[name].Parent then
-        return -- already exists
-    end
+-- ====================== ACTION BUTTONS (SIMPLE & MOBILE RELIABLE) ======================
+local function createActionButton(key, text, yPos, callback)
+    if AG.ActionButtons[key] then return end
 
     local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(0, 220, 0, 65)
-    btn.Position = UDim2.new(0.5, -110, yScale, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+    btn.Name = key
+    btn.Size = UDim2.new(0, 240, 0, 70)
+    btn.Position = UDim2.new(0.5, -120, yPos, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
     btn.Text = text
     btn.TextColor3 = Color3.new(1,1,1)
     btn.TextScaled = true
@@ -238,66 +231,59 @@ local function createActionButton(name, text, yScale, callback)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
 
     btn.MouseButton1Click:Connect(callback)
-    AG.ActionButtons[name] = btn
+    btn.TouchTap:Connect(callback)  -- Extra mobile support
+
+    AG.ActionButtons[key] = btn
 end
 
-local function destroyActionButton(name)
-    if AG.ActionButtons[name] then
-        AG.ActionButtons[name]:Destroy()
-        AG.ActionButtons[name] = nil
+local function destroyActionButton(key)
+    if AG.ActionButtons[key] then
+        AG.ActionButtons[key]:Destroy()
+        AG.ActionButtons[key] = nil
     end
 end
 
--- Shoot Murder
-local function createShootMurderButton()
-    createActionButton("ShootMurder", "🔫 SHOOT MURDER", 0.72, function()
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character then
-                if plr.Character:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
-                    local gun = player.Character and (player.Character:FindFirstChild("Gun") or player.Backpack:FindFirstChild("Gun"))
-                    if gun and gun:IsA("Tool") then gun:Activate() end
-                    break
-                end
+-- Button Functions
+local function shootMurderFunc()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            if plr.Character:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
+                local gun = player.Character and (player.Character:FindFirstChild("Gun") or player.Backpack:FindFirstChild("Gun"))
+                if gun and gun:IsA("Tool") then gun:Activate() end
+                break
             end
         end
-    end)
+    end
 end
 
--- TP to Gun
-local function createTpToGunButton()
-    createActionButton("TpToGun", "🔫 TP TO GUN", 0.58, function()
-        local gun = Workspace:FindFirstChild("GunDrop", true) or Workspace:FindFirstChild("Gun", true)
-        if gun and gun:IsA("BasePart") then
-            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if root then root.CFrame = gun.CFrame + Vector3.new(0, 6, 0) end
-        else
-            StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "Error: Gun hasn't been dropped yet!", Duration = 4})
-        end
-    end)
+local function tpToGunFunc()
+    local gun = Workspace:FindFirstChild("GunDrop", true) or Workspace:FindFirstChild("Gun", true)
+    if gun and gun:IsA("BasePart") then
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then root.CFrame = gun.CFrame + Vector3.new(0, 6, 0) end
+    else
+        StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "Error: Gun hasn't been dropped yet!", Duration = 4})
+    end
 end
 
--- Kill Random
-local function createKillRandomButton()
-    createActionButton("KillRandom", "💀 KILL RANDOM", 0.44, function()
-        local candidates = {}
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                table.insert(candidates, plr)
-            end
+local function killRandomFunc()
+    local candidates = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            table.insert(candidates, plr)
         end
-        if #candidates > 0 then
-            local target = candidates[math.random(#candidates)]
-            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0, 3)
-                StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "Teleported to: "..target.Name, Duration = 3})
-            end
+    end
+    if #candidates > 0 then
+        local target = candidates[math.random(#candidates)]
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            root.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0, 3)
+            StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "Teleported to: "..target.Name, Duration = 3})
         end
-    end)
+    end
 end
 
 -- ====================== TOGGLES ======================
-
 createToggle("ESP", function(state)
     AG.Toggles.ESP = state
     if state then
@@ -313,7 +299,7 @@ end)
 
 createToggle("Shoot Murder Button", function(state)
     if state then
-        createShootMurderButton()
+        createActionButton("ShootMurder", "🔫 SHOOT MURDER", 0.7, shootMurderFunc)
     else
         destroyActionButton("ShootMurder")
     end
@@ -321,7 +307,7 @@ end)
 
 createToggle("TP to Gun Button", function(state)
     if state then
-        createTpToGunButton()
+        createActionButton("TpToGun", "🔫 TP TO GUN", 0.55, tpToGunFunc)
     else
         destroyActionButton("TpToGun")
     end
@@ -329,58 +315,42 @@ end)
 
 createToggle("Kill Random Button", function(state)
     if state then
-        createKillRandomButton()
+        createActionButton("KillRandom", "💀 KILL RANDOM", 0.4, killRandomFunc)
     else
         destroyActionButton("KillRandom")
     end
 end)
 
 createToggle("Inf Jump", function(state)
-    -- (your previous inf jump code)
     if state then
         AG.Connections.InfJump = UserInputService.JumpRequest:Connect(function()
             local hum = player.Character and player.Character:FindFirstChild("Humanoid")
             if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
         end)
     else
-        if AG.Connections.InfJump then
-            AG.Connections.InfJump:Disconnect()
-            AG.Connections.InfJump = nil
-        end
+        if AG.Connections.InfJump then AG.Connections.InfJump:Disconnect() end
     end
 end)
 
 createToggle("Noclip", function(state)
-    -- (your previous noclip code)
     if state then
         AG.Connections.Noclip = RunService.Stepped:Connect(function()
             local char = player.Character
             if char then
-                for _, part in ipairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
                 end
             end
         end)
     else
-        if AG.Connections.Noclip then
-            AG.Connections.Noclip:Disconnect()
-            AG.Connections.Noclip = nil
-        end
-        local char = player.Character
-        if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
-            end
-        end
+        if AG.Connections.Noclip then AG.Connections.Noclip:Disconnect() end
     end
 end)
 
 -- ====================== INIT ======================
-print("✅ AG MM2 - Action Buttons Fixed!")
+print("✅ AG MM2 Loaded - Action Buttons Fixed for Mobile")
 StarterGui:SetCore("SendNotification", {
     Title = "AG MM2",
-    Text = "Action buttons should now appear correctly!",
-    Duration = 6
+    Text = "Toggles should now spawn buttons correctly on mobile!",
+    Duration = 8
 })
