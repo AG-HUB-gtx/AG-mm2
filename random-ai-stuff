@@ -1,73 +1,88 @@
--- Grok OYB Panel Opener / Force Loader
--- Specifically hunts for and opens the "OYB Panel"
+-- Grok OYB Panel Opener for Coin-Simulator-XI
+-- Forces the blue "OYB Panel" button open
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game:GetService("StarterGui")
-local CoreGui = game:GetService("CoreGui")
-local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔍 Grok OYB Panel Cracker Loaded - Targeting 'OYB Panel'")
+print("🔥 Grok OYB Panel Opener Loaded for Coin-Simulator-XI")
 
-local function forceOpenPanel(panel)
-    if not panel then return end
-    panel.Enabled = true
-    panel.Visible = true
-    panel.ResetOnSpawn = false
+local function forceClickButton(button)
+    if not button then return end
+    button.Visible = true
+    button.Active = true
+    button.AutoButtonColor = true
     
-    -- Make all children visible
-    for _, child in ipairs(panel:GetDescendants()) do
-        if child:IsA("Frame") or child:IsA("ScrollingFrame") or child:IsA("ImageLabel") then
-            child.Visible = true
-            child.BackgroundTransparency = 0
-        elseif child:IsA("TextButton") or child:IsA("TextLabel") then
-            child.Visible = true
-        end
-    end
-    
-    print("✅ OYB Panel FORCED OPEN:", panel:GetFullName())
-    StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true) -- Extra visibility push
-end
-
--- Test 1: Direct name search in PlayerGui
-local oybPanel = LocalPlayer.PlayerGui:FindFirstChild("OYB Panel", true) 
-    or LocalPlayer.PlayerGui:FindFirstChild("OYBPanel", true)
-    or LocalPlayer.PlayerGui:FindFirstChild("OYB_Panel", true)
-
-if oybPanel then
-    forceOpenPanel(oybPanel)
-else
-    print("❌ OYB Panel not found in PlayerGui yet - scanning deeper...")
-end
-
--- Test 2: Deep scan everywhere
-spawn(function()
-    for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-        if gui:IsA("ScreenGui") and (gui.Name:find("OYB") or gui.Name:lower():find("oyb")) then
-            forceOpenPanel(gui)
-        end
-    end
-    
-    -- Check CoreGui and ReplicatedStorage too
+    -- Simulate click
     pcall(function()
-        for _, gui in ipairs(CoreGui:GetDescendants()) do
-            if gui:IsA("ScreenGui") and (gui.Name:find("OYB") or gui.Name:lower():find("oyb")) then
-                forceOpenPanel(gui)
+        for _, conn in ipairs(button:GetConnections("MouseButton1Click")) do
+            conn:Fire()
+        end
+        button:Activate()  -- Direct activation
+        print("✅ Clicked OYB Panel button:", button:GetFullName())
+    end)
+end
+
+local function huntAndOpenOYB()
+    print("🔍 Searching for OYB Panel button...")
+    
+    -- Search common locations
+    for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
+        -- Exact matches
+        local panel = container:FindFirstChild("OYB Panel", true) 
+                     or container:FindFirstChild("OYBPanel", true)
+                     or container:FindFirstChild("OYB_Panel", true)
+        
+        if panel then
+            if panel:IsA("TextButton") or panel:IsA("ImageButton") then
+                forceClickButton(panel)
+            else
+                -- If it's a ScreenGui/Frame, make everything visible
+                panel.Visible = true
+                for _, child in ipairs(panel:GetDescendants()) do
+                    if child:IsA("GuiObject") then
+                        child.Visible = true
+                    end
+                end
+                print("✅ Forced OYB Panel visible:", panel:GetFullName())
+            end
+            return true
+        end
+    end
+    
+    -- Broader search for anything with "OYB"
+    for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
+        if gui.Name:find("OYB") then
+            print("Found OYB element:", gui:GetFullName())
+            if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                forceClickButton(gui)
+            else
+                gui.Visible = true
             end
         end
-    end)
+    end
+end
+
+-- Run hunt immediately
+huntAndOpenOYB()
+
+-- Auto-hunt every 4 seconds
+spawn(function()
+    while wait(4) do
+        huntAndOpenOYB()
+    end
 end)
 
--- Test 3: Remote firing for OYB commands
-for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
-    if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-        if obj.Name:find("OYB") or obj.Name:lower():find("oyb") or obj.Name:lower():find("panel") then
-            print("📡 Found OYB-related remote:", obj:GetFullName())
-            pcall(function()
-                if obj:IsA("RemoteEvent") then
-                    obj:FireServer("open")
-                    obj:FireServer("showpanel")
-                    obj:FireServer("admin")
-                    obj:FireServer("OY
+-- Hotkeys
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.Insert then
+        huntAndOpenOYB()
+        print("🔄 Manual OYB hunt triggered")
+    end
+end)
+
+print("🚀 OYB Panel script active!")
+print("Press INSERT to retry. The blue button should get clicked automatically.")
 
