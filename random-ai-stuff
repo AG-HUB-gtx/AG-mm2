@@ -1,12 +1,12 @@
 -- Grok OYB Panel Opener for Coin-Simulator-XI
--- Forces the blue "OYB Panel" button open
+-- GitHub Raw Compatible - Force opens the blue OYB Panel button
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok OYB Panel Opener Loaded for Coin-Simulator-XI")
+print("🔥 Grok OYB Panel Opener Loaded")
 
 local function forceClickButton(button)
     if not button then return end
@@ -14,22 +14,19 @@ local function forceClickButton(button)
     button.Active = true
     button.AutoButtonColor = true
     
-    -- Simulate click
     pcall(function()
-        for _, conn in ipairs(button:GetConnections("MouseButton1Click")) do
+        for _, conn in pairs(button:GetConnections("MouseButton1Click") or {}) do
             conn:Fire()
         end
-        button:Activate()  -- Direct activation
-        print("✅ Clicked OYB Panel button:", button:GetFullName())
+        if button.Activate then button:Activate() end
+        print("✅ Clicked OYB Panel:", button:GetFullName())
     end)
 end
 
 local function huntAndOpenOYB()
-    print("🔍 Searching for OYB Panel button...")
+    print("🔍 Hunting OYB Panel...")
     
-    -- Search common locations
     for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
-        -- Exact matches
         local panel = container:FindFirstChild("OYB Panel", true) 
                      or container:FindFirstChild("OYBPanel", true)
                      or container:FindFirstChild("OYB_Panel", true)
@@ -38,22 +35,19 @@ local function huntAndOpenOYB()
             if panel:IsA("TextButton") or panel:IsA("ImageButton") then
                 forceClickButton(panel)
             else
-                -- If it's a ScreenGui/Frame, make everything visible
                 panel.Visible = true
                 for _, child in ipairs(panel:GetDescendants()) do
-                    if child:IsA("GuiObject") then
-                        child.Visible = true
-                    end
+                    if child:IsA("GuiObject") then child.Visible = true end
                 end
-                print("✅ Forced OYB Panel visible:", panel:GetFullName())
+                print("✅ Forced visible:", panel:GetFullName())
             end
             return true
         end
     end
     
-    -- Broader search for anything with "OYB"
+    -- Broader OYB search
     for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-        if gui.Name:find("OYB") then
+        if gui.Name:find("OYB") or gui.Name:lower():find("oyb") then
             print("Found OYB element:", gui:GetFullName())
             if gui:IsA("TextButton") or gui:IsA("ImageButton") then
                 forceClickButton(gui)
@@ -64,25 +58,23 @@ local function huntAndOpenOYB()
     end
 end
 
--- Run hunt immediately
+-- Initial hunt
 huntAndOpenOYB()
 
--- Auto-hunt every 4 seconds
+-- Auto hunt loop
 spawn(function()
-    while wait(4) do
+    while wait(3) do
         huntAndOpenOYB()
     end
 end)
 
--- Hotkeys
+-- Hotkey (INSERT)
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.Insert then
         huntAndOpenOYB()
-        print("🔄 Manual OYB hunt triggered")
     end
 end)
 
-print("🚀 OYB Panel script active!")
-print("Press INSERT to retry. The blue button should get clicked automatically.")
+print("🚀 OYB Panel script running. Press INSERT to retry.")
 
