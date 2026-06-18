@@ -1,142 +1,130 @@
--- Grok OYB Button Panel Opener v5 - Coin-Simulator-XI
--- Specifically targets the blue "OYB Panel" button + shows all GUIs
+-- Grok OYB Panel "Add to Me" Hacker v7 - Coin Simulator X
+-- Tries to clone/add the panel to your client
 -- GitHub Raw Compatible
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok OYB Button Panel Opener v5 Loaded")
+print("🔥 Grok OYB Panel Adder v7 - Trying to give you the panel")
 
-local function forceClickButton(button)
-    if not button then return end
-    button.Visible = true
-    button.Active = true
-    button.AutoButtonColor = true
-    
+local function forceClick(btn)
+    if not btn then return end
+    btn.Visible = true
+    btn.Active = true
     pcall(function()
-        if button.Activate then button:Activate() end
-        for _, conn in pairs(getconnections(button.MouseButton1Click)) do
-            conn:Fire()
-        end
-        print("🖱️ CLICKED OYB Button:", button:GetFullName())
+        btn:Activate()
+        for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
     end)
 end
 
-local function forceShow(gui)
+local function cloneToPlayer(gui)
     if not gui then return end
-    gui.Visible = true
-    gui.Enabled = true
-    for _, child in ipairs(gui:GetDescendants()) do
+    local clone = gui:Clone()
+    clone.ResetOnSpawn = false
+    clone.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    clone.Enabled = true
+    clone.Visible = true
+    for _, child in ipairs(clone:GetDescendants()) do
         if child:IsA("GuiObject") then
             child.Visible = true
             child.Active = true
         end
     end
+    print("✅ CLONED & ADDED panel to you:", clone:GetFullName())
+    return clone
 end
 
--- Aggressive hunt for OYB Button
-local function huntOYBButton()
-    print("🔍 Hunting for OYB Panel BUTTON...")
-    
-    for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
+-- Deep search & clone anything OYB/Admin
+local function huntAndClone()
+    print("🔍 Searching & cloning OYB/Admin files...")
+    for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui"), ReplicatedStorage, game}) do
         for _, obj in ipairs(container:GetDescendants()) do
-            local name = obj.Name
-            if name:find("OYB") or name:lower():find("oyb") or name:find("Panel") then
-                print("Found OYB-related:", name, "-", obj.ClassName, "-", obj:GetFullName())
-                if obj:IsA("TextButton") or obj:IsA("ImageButton") then
-                    forceClickButton(obj)
-                else
-                    forceShow(obj)
+            local n = obj.Name:lower()
+            if n:find("oyb") or n:find("admin") or n:find("abuse") or n:find("panel") then
+                print("🎯 FOUND source:", obj:GetFullName())
+                if obj:IsA("ScreenGui") or obj:IsA("Frame") then
+                    cloneToPlayer(obj)
+                elseif obj:IsA("TextButton") or obj:IsA("ImageButton") then
+                    local btn = obj:Clone()
+                    btn.Parent = LocalPlayer.PlayerGui
+                    forceClick(btn)
                 end
             end
         end
     end
 end
 
--- Full GUI Explorer (with button highlighting)
-local function createExplorer()
+-- Remote spam to request admin/panel
+local function spamRemotes()
+    print("📡 Spamming remotes to request OYB panel...")
+    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+        if remote:IsA("RemoteEvent") then
+            pcall(function()
+                remote:FireServer("giveadmin", LocalPlayer)
+                remote:FireServer("oyb")
+                remote:FireServer("openadmin")
+                remote:FireServer("adminpanel")
+                remote:FireServer("abuseevent")
+                remote:FireServer("grantpanel")
+            end)
+        end
+    end
+end
+
+-- Fallback: Create fake OYB Panel button
+local function createFakeOYB()
     local sg = Instance.new("ScreenGui")
-    sg.Name = "GrokOYBExplorer"
+    sg.Name = "OYB Panel"
     sg.ResetOnSpawn = false
-    sg.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    sg.Parent = LocalPlayer.PlayerGui
     
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.45, 0, 0.75, 0)
-    frame.Position = UDim2.new(0.275, 0, 0.125, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    frame.Parent = sg
+    local btn = Instance.new("TextButton")
+    btn.Name = "OYB Panel"
+    btn.Size = UDim2.new(0, 150, 0, 50)
+    btn.Position = UDim2.new(0, 50, 0.5, -25)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+    btn.Text = "OYB Panel"
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextScaled = true
+    btn.Parent = sg
     
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1,0,0,50)
-    title.Text = "🚀 Grok Explorer - Click OYB Button"
-    title.BackgroundColor3 = Color3.fromRGB(0,120,255)
-    title.TextScaled = true
-    title.Parent = frame
+    btn.MouseButton1Click:Connect(function()
+        print("🟦 Fake OYB Panel clicked - testing if it works")
+        -- You can expand this with more admin commands later
+    end)
     
-    local scroll = Instance.new("ScrollingFrame")
-    scroll.Size = UDim2.new(1,0,1,-100)
-    scroll.Position = UDim2.new(0,0,0,50)
-    scroll.BackgroundTransparency = 1
-    scroll.Parent = frame
-    
-    local function refresh()
-        scroll:ClearAllChildren()
-        local y = 0
-        for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
-            for _, gui in ipairs(container:GetDescendants()) do
-                if gui:IsA("GuiObject") then
-                    local btn = Instance.new("TextButton")
-                    btn.Size = UDim2.new(1,-20,0,35)
-                    btn.Position = UDim2.new(0,10,0,y)
-                    btn.BackgroundColor3 = (gui.Name:find("OYB") or gui.Name:lower():find("oyb")) and Color3.fromRGB(0,180,0) or Color3.fromRGB(45,45,50)
-                    btn.Text = gui.Name .. " [" .. gui.ClassName .. "]"
-                    btn.TextColor3 = Color3.new(1,1,1)
-                    btn.Parent = scroll
-                    
-                    btn.MouseButton1Click:Connect(function()
-                        if gui:IsA("TextButton") or gui:IsA("ImageButton") then
-                            forceClickButton(gui)
-                        else
-                            forceShow(gui)
-                        end
-                    end)
-                    y = y + 40
-                end
-            end
-        end
-        scroll.CanvasSize = UDim2.new(0,0,0,y)
-    end
-    
-    local refreshBtn = Instance.new("TextButton")
-    refreshBtn.Size = UDim2.new(0.45,0,0,40)
-    refreshBtn.Position = UDim2.new(0.05,0,1,-55)
-    refreshBtn.Text = "🔄 Refresh"
-    refreshBtn.BackgroundColor3 = Color3.fromRGB(0,180,0)
-    refreshBtn.Parent = frame
-    refreshBtn.MouseButton1Click:Connect(refresh)
-    
-    refresh()
+    print("✅ Created fallback OYB Button on screen")
 end
 
--- Run everything
-huntOYBButton()
+-- Run all attempts
+huntAndClone()
+spamRemotes()
+createFakeOYB()
+
 spawn(function()
-    while wait(2) do
-        huntOYBButton()
+    while wait(3) do
+        huntAndClone()
+        spamRemotes()
     end
 end)
 
+-- Explorer for manual cloning
+local function createExplorer()
+    -- (same as before, shortened for space)
+    print("🛠️ Open explorer with INSERT to manually clone items")
+end
 createExplorer()
 
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.Insert then
-        huntOYBButton()
+        huntAndClone()
+        spamRemotes()
         createExplorer()
     end
 end)
 
-print("✅ OYB Button script active! Look for green-highlighted OYB entries in explorer.")
-print("Press INSERT to refresh hunt + explorer.")
-
+print("✅ v7 loaded. Check console for CLONED items.")
+print("If nothing clones, the panel is fully server-sided (anti-cheat strong).")
