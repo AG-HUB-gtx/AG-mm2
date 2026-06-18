@@ -1,127 +1,95 @@
--- Grok OYB Panel FULL BYPASS v9 - AG Jailbreak
--- Coin Simulator X - Trying to force admin status + panel
+-- Grok Super Admin Grant v12 - Coin Simulator X (AG Jailbreak)
+-- Attempts to force super admin + OYB Panel access
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 AG JAILBREAK v9 - Forcing OYB Panel in Coin Simulator X")
+print("🔥 AG JAILBREAK SUPER ADMIN GRANT v12 Loaded")
 
--- Metatable + Namecall Hook (log + spoof)
+-- Metatable hook for logging + potential spoof
 local mt = getrawmetatable(game)
-local old = mt.__namecall
+local oldNamecall = mt.__namecall
 setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
-    local args = {...}
     local method = getnamecallmethod()
+    local args = {...}
     if method == "FireServer" or method == "InvokeServer" then
-        print("[REMOTE] " .. self:GetFullName() .. " | Args:", unpack(args))
+        print("[REMOTE LOG] " .. self:GetFullName() .. " | Args: ", unpack(args))
     end
-    return old(self, ...)
+    return oldNamecall(self, ...)
 end)
 setreadonly(mt, true)
 
-local function forceCloneAndRun(obj)
-    if not obj then return end
-    local clone = obj:Clone()
-    clone.ResetOnSpawn = false
-    if clone:IsA("LocalScript") then clone.Disabled = false end
-    clone.Parent = LocalPlayer:WaitForChild("PlayerGui")
-    print("✅ FORCED CLONE + RUN:", clone:GetFullName())
-end
-
-local function deepHunt()
-    print("🔍 DEEP HUNT for OYB/Admin files...")
-    for _, obj in ipairs(game:GetDescendants()) do
-        local n = obj.Name:lower()
-        if n:find("oyb") or n:find("admin") or n:find("abuse") or n:find("panel") then
-            print("🎯 TARGET FOUND:", obj:GetFullName(), obj.ClassName)
-            forceCloneAndRun(obj)
-            if obj:IsA("TextButton") or obj:IsA("ImageButton") then
-                task.spawn(function()
-                    obj.Visible = true
-                    for i=1,10 do
-                        pcall(function() obj:Activate() end)
-                        task.wait(0.1)
-                    end
-                end)
-            end
-        end
-    end
-end
-
-local function forceAdminRemotes()
-    print("📡 FORCING ADMIN GRANT REMOTES...")
+local function spamSuperAdmin()
+    print("📡 SPAMMING SUPER ADMIN GRANT ATTEMPTS...")
     for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
         if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
             task.spawn(function()
                 pcall(function()
-                    remote:FireServer("giveadmin", LocalPlayer, true)
-                    remote:FireServer("OYB", "grant")
-                    remote:FireServer("adminabuse", "open", LocalPlayer.UserId)
-                    remote:FireServer("setadmin", true)
-                    remote:FireServer("abuseeventpanel")
+                    -- Common admin grant patterns
+                    remote:FireServer("giveadmin", LocalPlayer, "superadmin", true)
+                    remote:FireServer("setrank", LocalPlayer, "superadmin")
+                    remote:FireServer("grant", "owner", "OYB")
+                    remote:FireServer("adminabuse", "enable", LocalPlayer.UserId)
+                    remote:FireServer("OYB Panel", "activate")
+                    remote:FireServer("abuseeventpanel", "grant")
+                    remote:FireServer("addadmin", LocalPlayer.Name, 999)
                 end)
             end)
         end
     end
 end
 
--- Fake persistent OYB Button + admin simulation
-local function injectFakePanel()
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "OYB Panel"
-    sg.ResetOnSpawn = false
-    sg.Parent = LocalPlayer.PlayerGui
-
-    local btn = Instance.new("TextButton")
-    btn.Name = "OYB Panel"
-    btn.Size = UDim2.new(0, 180, 0, 70)
-    btn.Position = UDim2.new(0, 30, 0.3, 0)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 70, 255)
-    btn.Text = "OYB / Admin Abuse Panel\n(Injected)"
-    btn.TextScaled = true
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Parent = sg
-
-    btn.MouseButton1Click:Connect(function()
-        print("🟦 INJECTED OYB CLICKED - Spamming admin commands")
-        forceAdminRemotes()
-        deepHunt()
-    end)
-    print("✅ INJECTED BLUE OYB BUTTON")
-end
-
--- Execute everything
-deepHunt()
-forceAdminRemotes()
-injectFakePanel()
-
-spawn(function()
-    while wait(1) do
-        deepHunt()
-        forceAdminRemotes()
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    for _, g in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-        if g.Name:lower():find("oyb") or g.Name:lower():find("panel") then
-            g.Visible = true
-            g.Enabled = true
+local function injectAdminValues()
+    print("💉 Injecting admin flags...")
+    for _, v in ipairs(LocalPlayer:GetDescendants()) do
+        if v:IsA("BoolValue") or v:IsA("StringValue") or v:IsA("NumberValue") then
+            if v.Name:lower():find("admin") or v.Name:lower():find("rank") or v.Name:lower():find("permission") then
+                v.Value = true
+                print("Injected admin flag:", v:GetFullName())
+            end
         end
     end
+end
+
+-- Persistent fake + real attempt button
+local sg = Instance.new("ScreenGui")
+sg.Name = "SuperAdminInjector"
+sg.ResetOnSpawn = false
+sg.Parent = LocalPlayer.PlayerGui
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0, 250, 0, 80)
+btn.Position = UDim2.new(0, 30, 0.3, 0)
+btn.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
+btn.Text = "🔴 GRANT SUPER ADMIN\n(Spam for OYB Panel)"
+btn.TextScaled = true
+btn.TextColor3 = Color3.new(1,1,1)
+btn.Parent = sg
+
+btn.MouseButton1Click:Connect(function()
+    print("🚀 SUPER ADMIN GRANT TRIGGERED")
+    spamSuperAdmin()
+    injectAdminValues()
 end)
 
-print("✅ v9 MAX AGGRESSION loaded. Blue button should appear.")
-print("Click it repeatedly. Check console for FOUND/CLONED/REMOTE.")
-print("Press INSERT to retry full force.")
+-- Auto spam loop
+spawn(function()
+    while wait(1.2) do
+        spamSuperAdmin()
+        injectAdminValues()
+    end
+end)
 
-UserInputService.InputBegan:Connect(function(i, gp)
+print("✅ v12 loaded. Click the red button repeatedly.")
+print("Watch console for remote logs. If super admin granted, OYB Panel should appear.")
+print("If kicked → strong server-side anti-cheat on admin system.")
+
+game:GetService("UserInputService").InputBegan:Connect(function(i, gp)
     if gp then return end
     if i.KeyCode == Enum.KeyCode.Insert then
-        deepHunt()
-        forceAdminRemotes()
+        spamSuperAdmin()
     end
 end)
