@@ -1,12 +1,12 @@
--- Grok OYB Panel Opener for Coin-Simulator-XI
--- GitHub Raw Compatible - Force opens the blue OYB Panel button
+-- Grok OYB Button Panel Opener v5 - Coin-Simulator-XI
+-- Specifically targets the blue "OYB Panel" button + shows all GUIs
+-- GitHub Raw Compatible
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok OYB Panel Opener Loaded")
+print("🔥 Grok OYB Button Panel Opener v5 Loaded")
 
 local function forceClickButton(button)
     if not button then return end
@@ -15,66 +15,128 @@ local function forceClickButton(button)
     button.AutoButtonColor = true
     
     pcall(function()
-        for _, conn in pairs(button:GetConnections("MouseButton1Click") or {}) do
+        if button.Activate then button:Activate() end
+        for _, conn in pairs(getconnections(button.MouseButton1Click)) do
             conn:Fire()
         end
-        if button.Activate then button:Activate() end
-        print("✅ Clicked OYB Panel:", button:GetFullName())
+        print("🖱️ CLICKED OYB Button:", button:GetFullName())
     end)
 end
 
-local function huntAndOpenOYB()
-    print("🔍 Hunting OYB Panel...")
-    
-    for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
-        local panel = container:FindFirstChild("OYB Panel", true) 
-                     or container:FindFirstChild("OYBPanel", true)
-                     or container:FindFirstChild("OYB_Panel", true)
-        
-        if panel then
-            if panel:IsA("TextButton") or panel:IsA("ImageButton") then
-                forceClickButton(panel)
-            else
-                panel.Visible = true
-                for _, child in ipairs(panel:GetDescendants()) do
-                    if child:IsA("GuiObject") then child.Visible = true end
-                end
-                print("✅ Forced visible:", panel:GetFullName())
-            end
-            return true
+local function forceShow(gui)
+    if not gui then return end
+    gui.Visible = true
+    gui.Enabled = true
+    for _, child in ipairs(gui:GetDescendants()) do
+        if child:IsA("GuiObject") then
+            child.Visible = true
+            child.Active = true
         end
     end
+end
+
+-- Aggressive hunt for OYB Button
+local function huntOYBButton()
+    print("🔍 Hunting for OYB Panel BUTTON...")
     
-    -- Broader OYB search
-    for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-        if gui.Name:find("OYB") or gui.Name:lower():find("oyb") then
-            print("Found OYB element:", gui:GetFullName())
-            if gui:IsA("TextButton") or gui:IsA("ImageButton") then
-                forceClickButton(gui)
-            else
-                gui.Visible = true
+    for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
+        for _, obj in ipairs(container:GetDescendants()) do
+            local name = obj.Name
+            if name:find("OYB") or name:lower():find("oyb") or name:find("Panel") then
+                print("Found OYB-related:", name, "-", obj.ClassName, "-", obj:GetFullName())
+                if obj:IsA("TextButton") or obj:IsA("ImageButton") then
+                    forceClickButton(obj)
+                else
+                    forceShow(obj)
+                end
             end
         end
     end
 end
 
--- Initial hunt
-huntAndOpenOYB()
+-- Full GUI Explorer (with button highlighting)
+local function createExplorer()
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "GrokOYBExplorer"
+    sg.ResetOnSpawn = false
+    sg.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.45, 0, 0.75, 0)
+    frame.Position = UDim2.new(0.275, 0, 0.125, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    frame.Parent = sg
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1,0,0,50)
+    title.Text = "🚀 Grok Explorer - Click OYB Button"
+    title.BackgroundColor3 = Color3.fromRGB(0,120,255)
+    title.TextScaled = true
+    title.Parent = frame
+    
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1,0,1,-100)
+    scroll.Position = UDim2.new(0,0,0,50)
+    scroll.BackgroundTransparency = 1
+    scroll.Parent = frame
+    
+    local function refresh()
+        scroll:ClearAllChildren()
+        local y = 0
+        for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui")}) do
+            for _, gui in ipairs(container:GetDescendants()) do
+                if gui:IsA("GuiObject") then
+                    local btn = Instance.new("TextButton")
+                    btn.Size = UDim2.new(1,-20,0,35)
+                    btn.Position = UDim2.new(0,10,0,y)
+                    btn.BackgroundColor3 = (gui.Name:find("OYB") or gui.Name:lower():find("oyb")) and Color3.fromRGB(0,180,0) or Color3.fromRGB(45,45,50)
+                    btn.Text = gui.Name .. " [" .. gui.ClassName .. "]"
+                    btn.TextColor3 = Color3.new(1,1,1)
+                    btn.Parent = scroll
+                    
+                    btn.MouseButton1Click:Connect(function()
+                        if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                            forceClickButton(gui)
+                        else
+                            forceShow(gui)
+                        end
+                    end)
+                    y = y + 40
+                end
+            end
+        end
+        scroll.CanvasSize = UDim2.new(0,0,0,y)
+    end
+    
+    local refreshBtn = Instance.new("TextButton")
+    refreshBtn.Size = UDim2.new(0.45,0,0,40)
+    refreshBtn.Position = UDim2.new(0.05,0,1,-55)
+    refreshBtn.Text = "🔄 Refresh"
+    refreshBtn.BackgroundColor3 = Color3.fromRGB(0,180,0)
+    refreshBtn.Parent = frame
+    refreshBtn.MouseButton1Click:Connect(refresh)
+    
+    refresh()
+end
 
--- Auto hunt loop
+-- Run everything
+huntOYBButton()
 spawn(function()
-    while wait(3) do
-        huntAndOpenOYB()
+    while wait(2) do
+        huntOYBButton()
     end
 end)
 
--- Hotkey (INSERT)
+createExplorer()
+
 UserInputService.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.Insert then
-        huntAndOpenOYB()
+        huntOYBButton()
+        createExplorer()
     end
 end)
 
-print("🚀 OYB Panel script running. Press INSERT to retry.")
+print("✅ OYB Button script active! Look for green-highlighted OYB entries in explorer.")
+print("Press INSERT to refresh hunt + explorer.")
 
