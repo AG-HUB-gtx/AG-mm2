@@ -1,130 +1,127 @@
--- Grok OYB Panel "Add to Me" Hacker v7 - Coin Simulator X
--- Tries to clone/add the panel to your client
--- GitHub Raw Compatible
+-- Grok OYB Panel FULL BYPASS v9 - AG Jailbreak
+-- Coin Simulator X - Trying to force admin status + panel
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok OYB Panel Adder v7 - Trying to give you the panel")
+print("🔥 AG JAILBREAK v9 - Forcing OYB Panel in Coin Simulator X")
 
-local function forceClick(btn)
-    if not btn then return end
-    btn.Visible = true
-    btn.Active = true
-    pcall(function()
-        btn:Activate()
-        for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
-    end)
-end
-
-local function cloneToPlayer(gui)
-    if not gui then return end
-    local clone = gui:Clone()
-    clone.ResetOnSpawn = false
-    clone.Parent = LocalPlayer:WaitForChild("PlayerGui")
-    clone.Enabled = true
-    clone.Visible = true
-    for _, child in ipairs(clone:GetDescendants()) do
-        if child:IsA("GuiObject") then
-            child.Visible = true
-            child.Active = true
-        end
+-- Metatable + Namecall Hook (log + spoof)
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    if method == "FireServer" or method == "InvokeServer" then
+        print("[REMOTE] " .. self:GetFullName() .. " | Args:", unpack(args))
     end
-    print("✅ CLONED & ADDED panel to you:", clone:GetFullName())
-    return clone
+    return old(self, ...)
+end)
+setreadonly(mt, true)
+
+local function forceCloneAndRun(obj)
+    if not obj then return end
+    local clone = obj:Clone()
+    clone.ResetOnSpawn = false
+    if clone:IsA("LocalScript") then clone.Disabled = false end
+    clone.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    print("✅ FORCED CLONE + RUN:", clone:GetFullName())
 end
 
--- Deep search & clone anything OYB/Admin
-local function huntAndClone()
-    print("🔍 Searching & cloning OYB/Admin files...")
-    for _, container in ipairs({LocalPlayer.PlayerGui, game:GetService("CoreGui"), ReplicatedStorage, game}) do
-        for _, obj in ipairs(container:GetDescendants()) do
-            local n = obj.Name:lower()
-            if n:find("oyb") or n:find("admin") or n:find("abuse") or n:find("panel") then
-                print("🎯 FOUND source:", obj:GetFullName())
-                if obj:IsA("ScreenGui") or obj:IsA("Frame") then
-                    cloneToPlayer(obj)
-                elseif obj:IsA("TextButton") or obj:IsA("ImageButton") then
-                    local btn = obj:Clone()
-                    btn.Parent = LocalPlayer.PlayerGui
-                    forceClick(btn)
-                end
+local function deepHunt()
+    print("🔍 DEEP HUNT for OYB/Admin files...")
+    for _, obj in ipairs(game:GetDescendants()) do
+        local n = obj.Name:lower()
+        if n:find("oyb") or n:find("admin") or n:find("abuse") or n:find("panel") then
+            print("🎯 TARGET FOUND:", obj:GetFullName(), obj.ClassName)
+            forceCloneAndRun(obj)
+            if obj:IsA("TextButton") or obj:IsA("ImageButton") then
+                task.spawn(function()
+                    obj.Visible = true
+                    for i=1,10 do
+                        pcall(function() obj:Activate() end)
+                        task.wait(0.1)
+                    end
+                end)
             end
         end
     end
 end
 
--- Remote spam to request admin/panel
-local function spamRemotes()
-    print("📡 Spamming remotes to request OYB panel...")
+local function forceAdminRemotes()
+    print("📡 FORCING ADMIN GRANT REMOTES...")
     for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-        if remote:IsA("RemoteEvent") then
-            pcall(function()
-                remote:FireServer("giveadmin", LocalPlayer)
-                remote:FireServer("oyb")
-                remote:FireServer("openadmin")
-                remote:FireServer("adminpanel")
-                remote:FireServer("abuseevent")
-                remote:FireServer("grantpanel")
+        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+            task.spawn(function()
+                pcall(function()
+                    remote:FireServer("giveadmin", LocalPlayer, true)
+                    remote:FireServer("OYB", "grant")
+                    remote:FireServer("adminabuse", "open", LocalPlayer.UserId)
+                    remote:FireServer("setadmin", true)
+                    remote:FireServer("abuseeventpanel")
+                end)
             end)
         end
     end
 end
 
--- Fallback: Create fake OYB Panel button
-local function createFakeOYB()
+-- Fake persistent OYB Button + admin simulation
+local function injectFakePanel()
     local sg = Instance.new("ScreenGui")
     sg.Name = "OYB Panel"
     sg.ResetOnSpawn = false
     sg.Parent = LocalPlayer.PlayerGui
-    
+
     local btn = Instance.new("TextButton")
     btn.Name = "OYB Panel"
-    btn.Size = UDim2.new(0, 150, 0, 50)
-    btn.Position = UDim2.new(0, 50, 0.5, -25)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
-    btn.Text = "OYB Panel"
-    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Size = UDim2.new(0, 180, 0, 70)
+    btn.Position = UDim2.new(0, 30, 0.3, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 70, 255)
+    btn.Text = "OYB / Admin Abuse Panel\n(Injected)"
     btn.TextScaled = true
+    btn.TextColor3 = Color3.new(1,1,1)
     btn.Parent = sg
-    
+
     btn.MouseButton1Click:Connect(function()
-        print("🟦 Fake OYB Panel clicked - testing if it works")
-        -- You can expand this with more admin commands later
+        print("🟦 INJECTED OYB CLICKED - Spamming admin commands")
+        forceAdminRemotes()
+        deepHunt()
     end)
-    
-    print("✅ Created fallback OYB Button on screen")
+    print("✅ INJECTED BLUE OYB BUTTON")
 end
 
--- Run all attempts
-huntAndClone()
-spamRemotes()
-createFakeOYB()
+-- Execute everything
+deepHunt()
+forceAdminRemotes()
+injectFakePanel()
 
 spawn(function()
-    while wait(3) do
-        huntAndClone()
-        spamRemotes()
+    while wait(1) do
+        deepHunt()
+        forceAdminRemotes()
     end
 end)
 
--- Explorer for manual cloning
-local function createExplorer()
-    -- (same as before, shortened for space)
-    print("🛠️ Open explorer with INSERT to manually clone items")
-end
-createExplorer()
+RunService.RenderStepped:Connect(function()
+    for _, g in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
+        if g.Name:lower():find("oyb") or g.Name:lower():find("panel") then
+            g.Visible = true
+            g.Enabled = true
+        end
+    end
+end)
 
-UserInputService.InputBegan:Connect(function(input, gp)
+print("✅ v9 MAX AGGRESSION loaded. Blue button should appear.")
+print("Click it repeatedly. Check console for FOUND/CLONED/REMOTE.")
+print("Press INSERT to retry full force.")
+
+UserInputService.InputBegan:Connect(function(i, gp)
     if gp then return end
-    if input.KeyCode == Enum.KeyCode.Insert then
-        huntAndClone()
-        spamRemotes()
-        createExplorer()
+    if i.KeyCode == Enum.KeyCode.Insert then
+        deepHunt()
+        forceAdminRemotes()
     end
 end)
-
-print("✅ v7 loaded. Check console for CLONED items.")
-print("If nothing clones, the panel is fully server-sided (anti-cheat strong).")
