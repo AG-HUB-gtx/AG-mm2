@@ -1,0 +1,84 @@
+-- Grok Coin Simulator X - Set Rebirth to 5,000
+-- One-click rebirth setter
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+print("🔥 Grok Rebirth Setter Loaded - Sets rebirth to 5000")
+
+local function setRebirthTo5000()
+    print("🔄 Searching for rebirth value...")
+    
+    -- Common locations
+    local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+    if leaderstats then
+        for _, stat in ipairs(leaderstats:GetChildren()) do
+            if stat.Name:lower():find("rebirth") or stat.Name:lower():find("reborn") then
+                stat.Value = 5000
+                print("✅ Set rebirth to 5000 via leaderstats!")
+                return
+            end
+        end
+    end
+    
+    -- Deep search everywhere
+    for _, v in ipairs(LocalPlayer:GetDescendants()) do
+        if (v:IsA("IntValue") or v:IsA("NumberValue")) and 
+           (v.Name:lower():find("rebirth") or v.Name:lower():find("reborn")) then
+            v.Value = 5000
+            print("✅ Set rebirth to 5000 at:", v:GetFullName())
+            return
+        end
+    end
+    
+    -- Remote fallback (common in simulators)
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+        if remote:IsA("RemoteEvent") then
+            pcall(function()
+                remote:FireServer("setrebirth", 5000)
+                remote:FireServer("rebirths", 5000)
+                remote:FireServer("SetRebirths", 5000)
+            end)
+        end
+    end
+    
+    print("✅ Rebirth set attempt complete. Check your rebirth count!")
+end
+
+-- Simple GUI
+local sg = Instance.new("ScreenGui")
+sg.ResetOnSpawn = false
+sg.Parent = LocalPlayer.PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 320, 0, 140)
+frame.Position = UDim2.new(0, 30, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+frame.Parent = sg
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "Grok Rebirth Setter"
+title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+title.TextScaled = true
+title.Parent = frame
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9,0,0,60)
+btn.Position = UDim2.new(0.05,0,0,50)
+btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+btn.Text = "SET REBIRTH TO 5,000"
+btn.TextScaled = true
+btn.Parent = frame
+
+btn.MouseButton1Click:Connect(function()
+    btn.Text = "Setting Rebirth..."
+    btn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+    setRebirthTo5000()
+    wait(1)
+    btn.Text = "SET REBIRTH TO 5,000"
+    btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+end)
+
+print("✅ Script ready. Click the green button to set rebirth to 5k.")
