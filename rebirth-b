@@ -1,18 +1,22 @@
--- Grok Coin Simulator X - Server-Side Rebirth 1 Billion
--- Forces 1B rebirths on leaderboard
+-- Grok Coin Simulator X - Custom Rebirth Setter (Server + Leaderboard)
+-- Type any number and send to server
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok Server-Side Rebirth 1B Loaded")
+print("🔥 Grok Custom Rebirth Setter Loaded")
 
-local function forceRebirth1B()
-    print("🚀 Sending server-side 1 Billion rebirth requests...")
+local function sendRebirths(amount)
+    if not tonumber(amount) then 
+        print("❌ Please enter a valid number")
+        return 
+    end
+    
+    local target = tonumber(amount)
+    print("🚀 Sending " .. target .. " rebirths to server...")
 
-    local target = 1000000000  -- 1B
-
-    -- Heavy remote spam
+    -- Server-side remote spam
     for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
         if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
             pcall(function()
@@ -28,18 +32,18 @@ local function forceRebirth1B()
         end
     end
 
-    -- Leaderstats visual
+    -- Leaderboard / leaderstats force
     local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
     if leaderstats then
         for _, stat in ipairs(leaderstats:GetChildren()) do
             if stat.Name:lower():find("rebirth") or stat.Name:lower():find("reborn") then
                 stat.Value = target
-                print("✅ Visual leaderstats set to 1B:", stat.Name)
+                print("✅ Leaderboard set to:", target)
             end
         end
     end
 
-    print("✅ 1 Billion rebirth requests sent. Check the leaderboard!")
+    print("✅ Sent " .. target .. " rebirths! Check leaderboard.")
 end
 
 -- GUI
@@ -48,33 +52,42 @@ sg.ResetOnSpawn = false
 sg.Parent = LocalPlayer.PlayerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 380, 0, 180)
+frame.Size = UDim2.new(0, 380, 0, 220)
 frame.Position = UDim2.new(0, 30, 0.25, 0)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 frame.Parent = sg
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,45)
-title.Text = "Server-Side Rebirth 1 Billion"
+title.Text = "Grok Custom Rebirth Setter"
 title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
 title.TextScaled = true
 title.Parent = frame
 
+local input = Instance.new("TextBox")
+input.Size = UDim2.new(0.9,0,0,50)
+input.Position = UDim2.new(0.05,0,0,55)
+input.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+input.Text = "5000"
+input.TextScaled = true
+input.PlaceholderText = "Enter rebirth amount"
+input.Parent = frame
+
 local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9,0,0,80)
-btn.Position = UDim2.new(0.05,0,0,55)
+btn.Size = UDim2.new(0.9,0,0,60)
+btn.Position = UDim2.new(0.05,0,0,115)
 btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-btn.Text = "FORCE 1 BILLION REBIRTHS\n(Leaderboard)"
+btn.Text = "SEND TO SERVER + LEADERBOARD"
 btn.TextScaled = true
 btn.Parent = frame
 
 btn.MouseButton1Click:Connect(function()
-    btn.Text = "Sending 1B to Server..."
+    btn.Text = "SENDING..."
     btn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
-    forceRebirth1B()
-    wait(2)
-    btn.Text = "FORCE 1 BILLION REBIRTHS\n(Leaderboard)"
+    sendRebirths(input.Text)
+    wait(1.5)
+    btn.Text = "SEND TO SERVER + LEADERBOARD"
     btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
 end)
 
-print("✅ Script ready. Click the button multiple times.")
+print("✅ Script ready! Type a number (e.g. 1000000000 for 1B) and click Send.")
