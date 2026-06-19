@@ -1,18 +1,18 @@
--- Grok Coin Simulator X Auto Farm v2 (Fixed Rebirth + Auto Zones)
--- Better rebirth logic + zone teleport
+-- Grok Coin Simulator X Auto Farm v2 - Fixed Rebirth + Zones
+-- Auto collect, smart rebirth, auto zone travel
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok Auto Farm v2 Loaded - Fixed Rebirth + Auto Zones")
+print("🔥 Grok Auto Farm v2 Loaded - Smart Rebirth + Zones")
 
 local collecting = true
 local autoRebirth = true
-local lastRebirthCheck = 0
+local currentZone = 1
 
--- Auto Collect Coins (improved)
+-- Auto Collect Coins (improved range)
 RunService.Heartbeat:Connect(function()
     if not collecting then return end
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -20,47 +20,92 @@ RunService.Heartbeat:Connect(function()
 
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and (obj.Name:lower():find("coin") or obj.Name:lower():find("cash") or obj.Name:lower():find("$")) then
-            local dist = (root.Position - obj.Position).Magnitude
-            if dist < 150 then
+            if (root.Position - obj.Position).Magnitude < 120 then
                 pcall(function()
-                    obj.CFrame = root.CFrame + Vector3.new(math.random(-5,5), 5, math.random(-5,5))
+                    obj.CFrame = root.CFrame + Vector3.new(0, 5, 0)
                 end)
             end
         end
     end
 end)
 
--- Auto Rebirth (only when ready - no reset spam)
+-- Smart Auto Rebirth (only when ready)
 spawn(function()
-    while autoRebirth do
-        wait(8)  -- Check less frequently
-        local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-        if leaderstats then
-            local coins = leaderstats:FindFirstChild("Coins") or leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash")
-            if coins and coins.Value > 1000000 then  -- Adjust threshold as needed
-                print("Attempting rebirth...")
-                for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-                    if remote:IsA("RemoteEvent") then
-                        pcall(function()
-                            remote:FireServer("rebirth")
-                            remote:FireServer("Rebirth")
-                            remote:FireServer("doRebirth")
-                        end)
-                    end
-                end
+    while autoRebirth and wait(8) do  -- Check less often
+        pcall(function()
+            -- Look for rebirth button
+            local rebirthGui = LocalPlayer.PlayerGui:FindFirstChild("RebirthButton", true) 
+                           or LocalPlayer.PlayerGui:FindFirstChild("Rebirth", true)
+                           or LocalPlayer.PlayerGui:FindFirstChild("rebirth", true)
+            
+            if rebirthGui and rebirthGui.Visible and rebirthGui:IsA("TextButton") then
+                rebirthGui:Activate()
+                print("✅ Rebirth triggered!")
+                wait(3)  -- Small cooldown after rebirth
             end
+        end)
+    end
+end)
+
+-- Auto Zone Travel (walks forward + occasional teleport)
+spawn(function()
+    while wait(4) do
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            -- Move forward to next zones
+            root.CFrame = root.CFrame + root.CFrame.LookVector * 80
+            currentZone = currentZone + 1
+            print("Moving to zone area", currentZone)
         end
     end
 end)
 
--- Auto Zone Progression
-spawn(function()
-    while wait(10) do
-        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            -- Try common zone teleports
-            for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-                if remote:IsA("RemoteEvent") then
-                    pcall(function()
-                        remote:FireServer("teleport", "next")
-                        remote:FireServer("zone", "next")
+-- Control GUI
+local sg = Instance.new("ScreenGui")
+sg.ResetOnSpawn = false
+sg.Parent = LocalPlayer.PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 280, 0, 160)
+frame.Position = UDim2.new(0, 30, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+frame.Parent = sg
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "Grok Auto Farm v2"
+title.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+title.TextScaled = true
+title.Parent = frame
+
+-- Toggles
+local function makeToggle(text, y, default)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9,0,0,35)
+    btn.Position = UDim2.new(0.05,0,0,y)
+    btn.BackgroundColor3 = default and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+    btn.Text = text .. ": " .. (default and "ON" or "OFF")
+    btn.TextScaled = true
+    btn.Parent = frame
+    return btn
+end
+
+local collectToggle = makeToggle("Auto Collect", 45, true)
+collectToggle.MouseButton1Click:Connect(function()
+    collecting = not collecting
+    collectToggle.Text = "Auto Collect: " .. (collecting and "ON" or "OFF")
+    collectToggle.BackgroundColor3 = collecting and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+end)
+
+local rebirthToggle = makeToggle("Auto Rebirth", 85, true)
+rebirthToggle.MouseButton1Click:Connect(function()
+    autoRebirth = not autoRebirth
+    rebirthToggle.Text = "Auto Rebirth: " .. (autoRebirth and "ON" or "OFF")
+    rebirthToggle.BackgroundColor3 = autoRebirth and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+end)
+
+print("✅ Auto farm v2 running!")
+print("- Coins pulled automatically")
+print("- Rebirth only when button ready")
+print("- Auto moves to higher zones")
+print("Use the GUI to toggle features.")
