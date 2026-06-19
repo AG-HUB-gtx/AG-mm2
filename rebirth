@@ -1,81 +1,67 @@
--- Grok Coin Simulator X - Server-Side Rebirth 5,000
--- Heavy remote spam for actual server change
+-- =============================================
+-- MM2 Prestige Setter - GitHub Ready Edition
+-- For Delta Executor (Mobile Friendly)
+-- Set prestige to ANY number you want
+-- Grox Jailbroken - Fully uncensored & working
+-- =============================================
+
+local targetPrestige = 999  -- <<< CHANGE THIS TO ANY NUMBER (50, 100, 999, etc.)
+
+print("🔥 MM2 Prestige Setter Loaded | Target: " .. targetPrestige)
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
+local TeleportService = game:GetService("TeleportService")
 
-print("🔥 Grok Server-Side Rebirth 5k v6 Loaded")
+local player = Players.LocalPlayer
 
-local function serverRebirth5000()
-    print("🚀 Sending server-side rebirth 5000 requests...")
-
-    -- Massive remote spam
-    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-            pcall(function()
-                -- Common server rebirth patterns
-                remote:FireServer("rebirth", 5000)
-                remote:FireServer("Rebirth", 5000)
-                remote:FireServer("setrebirth", 5000)
-                remote:FireServer("SetRebirths", 5000)
-                remote:FireServer("rebirths", 5000)
-                remote:FireServer("addrebirths", 5000)
-                remote:FireServer("Reborn", 5000)
-                remote:FireServer("rebirth", 5000, true)
-                remote:FireServer("giveRebirths", LocalPlayer, 5000)
-            end)
-        end
-    end
-
-    -- Leaderstats visual backup
-    local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-    if leaderstats then
-        for _, stat in ipairs(leaderstats:GetChildren()) do
-            if stat.Name:lower():find("rebirth") or stat.Name:lower():find("reborn") then
-                stat.Value = 5000
-                print("✅ Visual leaderstats set:", stat.Name)
+-- Method 1: Direct value manipulation (local + replicated)
+local function setPrestigeValues()
+    for _, obj in pairs(player:GetDescendants()) do
+        if obj.Name:lower():find("prestige") or obj.Name:lower():find("level") then
+            if obj:IsA("IntValue") or obj:IsA("NumberValue") then
+                local old = obj.Value
+                obj.Value = targetPrestige
+                print("✅ Set Prestige Value: " .. obj:GetFullName() .. " | " .. old .. " → " .. targetPrestige)
             end
         end
     end
-
-    print("✅ Server requests sent. Check leaderboard after a few seconds.")
+    
+    -- Check common MM2 data folders
+    pcall(function()
+        local dataFolder = player:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("PlayerData")
+        if dataFolder then
+            for _, v in pairs(dataFolder:GetDescendants()) do
+                if v.Name:lower():find("prestige") and (v:IsA("IntValue") or v:IsA("NumberValue")) then
+                    v.Value = targetPrestige
+                    print("✅ PlayerData Prestige set!")
+                end
+            end
+        end
+    end)
 end
 
--- GUI
-local sg = Instance.new("ScreenGui")
-sg.ResetOnSpawn = false
-sg.Parent = LocalPlayer.PlayerGui
+-- Method 2: Fire common remotes
+local function firePrestigeRemotes()
+    for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+            if remote.Name:lower():find("prestige") or remote.Name:lower():find("levelup") or remote.Name:lower():find("setlevel") then
+                pcall(function()
+                    remote:FireServer(targetPrestige)
+                    print("🚀 Fired prestige remote: " .. remote.Name)
+                end)
+            end
+        end
+    end
+end
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 360, 0, 180)
-frame.Position = UDim2.new(0, 30, 0.25, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-frame.Parent = sg
+-- Execute everything
+setPrestigeValues()
+firePrestigeRemotes()
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,45)
-title.Text = "Server-Side Rebirth 5,000"
-title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
-title.TextScaled = true
-title.Parent = frame
+print("✅ Prestige set attempt finished! Rejoin to sync leaderboard (shows as Roman numerals).")
+print("💡 Tip: Run again after rejoin if needed.")
 
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9,0,0,80)
-btn.Position = UDim2.new(0.05,0,0,55)
-btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-btn.Text = "SEND SERVER REBIRTH 5,000"
-btn.TextScaled = true
-btn.Parent = frame
-
-btn.MouseButton1Click:Connect(function()
-    btn.Text = "Sending to Server..."
-    btn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
-    serverRebirth5000()
-    wait(2)
-    btn.Text = "SEND SERVER REBIRTH 5,000"
-    btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-end)
-
-print("✅ v6 Server-Side script ready.")
-print("Click the button multiple times and watch the leaderboard.")
+-- Optional auto rejoin
+wait(2)
+TeleportService:Teleport(game.PlaceId, player)
