@@ -1,75 +1,100 @@
--- Grok Kohl's Admin Owner Spoof
--- Targets Owner rank (5) and Game Creator (6)
+-- Grok Coin Simulator X Auto Farm (Coins + Rebirth)
+-- Auto collects coins & rebirths when ready
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Kohl's Admin Owner Spoof Loaded")
+print("🔥 Grok Auto Farm Loaded - Coins + Rebirth")
 
-local function huntAndInject()
-    print("🔍 Hunting for Kohl's Admin settings...")
-    for _, obj in ipairs(game:GetDescendants()) do
-        local n = obj.Name:lower()
-        if n:find("kohl") or n:find("admin") or (obj.Name == "Settings" and obj:IsA("ModuleScript")) then
-            print("🎯 Kohl/Settings FOUND:", obj:GetFullName())
-            
-            pcall(function()
-                if obj:IsA("ModuleScript") then
-                    local settings = require(obj)
-                    if typeof(settings) == "table" then
-                        -- Inject into Owners / SuperAdmins
-                        if settings.Owners then
-                            table.insert(settings.Owners, LocalPlayer.UserId)
-                            table.insert(settings.Owners, LocalPlayer.Name)
-                            print("✅ Injected into Owners list")
-                        end
-                        if settings.SuperAdmins then
-                            table.insert(settings.SuperAdmins, LocalPlayer.UserId)
-                            print("✅ Injected into SuperAdmins")
-                        end
-                    end
-                end
-            end)
+local collecting = true
+local autoRebirth = true
+
+-- Auto Collect Coins
+RunService.Heartbeat:Connect(function()
+    if not collecting then return end
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    for _, coin in ipairs(workspace:GetDescendants()) do
+        if coin:IsA("BasePart") and (coin.Name:lower():find("coin") or coin.Name:lower():find("$") or coin:FindFirstChild("Coin")) then
+            local dist = (root.Position - coin.Position).Magnitude
+            if dist < 100 then
+                pcall(function()
+                    coin.CFrame = root.CFrame
+                end)
+            end
         end
     end
-end
-
--- Metatable rank spoof
-local mt = getrawmetatable(game)
-local oldIndex = mt.__index
-setreadonly(mt, false)
-mt.__index = newcclosure(function(self, key)
-    if key == "Rank" or key == "AdminLevel" or key == "IsOwner" or key == "IsAdmin" then
-        print("Spoofed rank check -> Owner")
-        return 5  -- Owner rank
-    end
-    return oldIndex(self, key)
 end)
-setreadonly(mt, true)
 
-local function spamOwnerCommands()
-    print("📡 Spamming Owner commands...")
-    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-        if remote:IsA("RemoteEvent") then
-            pcall(function()
-                remote:FireServer(":oa " .. LocalPlayer.Name)
-                remote:FireServer(":rank " .. LocalPlayer.Name .. " 5")
-                remote:FireServer(":admin " .. LocalPlayer.Name)
-                remote:FireServer(":settings")
-            end)
+-- Auto Rebirth
+spawn(function()
+    while autoRebirth and wait(5) do  -- Check every 5 seconds
+        -- Try common rebirth remotes/buttons
+        for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+            if remote:IsA("RemoteEvent") then
+                pcall(function()
+                    remote:FireServer("rebirth")
+                    remote:FireServer("Rebirth")
+                    remote:FireServer("doRebirth")
+                end)
+            end
         end
-    end
-end
 
--- Owner button
+        -- Try UI rebirth button
+        pcall(function()
+            local rebirthBtn = LocalPlayer.PlayerGui:FindFirstChild("Rebirth", true) or LocalPlayer.PlayerGui:FindFirstChild("rebirth", true)
+            if rebirthBtn and rebirthBtn:IsA("TextButton") then
+                rebirthBtn:Activate()
+                print("✅ Rebirth button clicked")
+            end
+        end)
+    end
+end)
+
+-- Simple GUI Toggle
 local sg = Instance.new("ScreenGui")
 sg.ResetOnSpawn = false
 sg.Parent = LocalPlayer.PlayerGui
 
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0, 280, 0, 90)
-btn.Position = UDim2.new(0, 30, 0.35, 0)
-btn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-btn.Text = "🔥 KOHL OWNER SPOOF\nClick to Spam"
-btn.TextScaled = true
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 120)
+frame.Position = UDim2.new(0, 30, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Parent = sg
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,40)
+title.Text = "Grok Auto Farm"
+title.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+title.TextScaled = true
+title.Parent = frame
+
+local collectBtn = Instance.new("TextButton")
+collectBtn.Size = UDim2.new(0.9,0,0,30)
+collectBtn.Position = UDim2.new(0.05,0,0,45)
+collectBtn.Text = "Auto Collect: ON"
+collectBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+collectBtn.Parent = frame
+collectBtn.MouseButton1Click:Connect(function()
+    collecting = not collecting
+    collectBtn.Text = "Auto Collect: " .. (collecting and "ON" or "OFF")
+    collectBtn.BackgroundColor3 = collecting and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+end)
+
+local rebirthBtn = Instance.new("TextButton")
+rebirthBtn.Size = UDim2.new(0.9,0,0,30)
+rebirthBtn.Position = UDim2.new(0.05,0,0,80)
+rebirthBtn.Text = "Auto Rebirth: ON"
+rebirthBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+rebirthBtn.Parent = frame
+rebirthBtn.MouseButton1Click:Connect(function()
+    autoRebirth = not autoRebirth
+    rebirthBtn.Text = "Auto Rebirth: " .. (autoRebirth and "ON" or "OFF")
+    rebirthBtn.BackgroundColor3 = autoRebirth and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+end)
+
+print("✅ Auto farm running! Use the GUI to toggle.")
+print("Coins should fly to you. Rebirth checks every 5s.")
