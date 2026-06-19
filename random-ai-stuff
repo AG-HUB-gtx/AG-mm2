@@ -1,111 +1,109 @@
--- Grok Coin Simulator X Auto Farm v2 - Fixed Rebirth + Zones
--- Auto collect, smart rebirth, auto zone travel
+-- Grok Coin Simulator X Auto Farm v3 - Fixed Collection + Rebirth + Zones
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok Auto Farm v2 Loaded - Smart Rebirth + Zones")
+print("🔥 Grok Auto Farm v3 - Improved Coins + Rebirth + Zones")
 
 local collecting = true
 local autoRebirth = true
-local currentZone = 1
 
--- Auto Collect Coins (improved range)
+-- === AUTO COLLECT COINS (more robust) ===
 RunService.Heartbeat:Connect(function()
     if not collecting then return end
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and (obj.Name:lower():find("coin") or obj.Name:lower():find("cash") or obj.Name:lower():find("$")) then
-            if (root.Position - obj.Position).Magnitude < 120 then
+        local nameLower = obj.Name:lower()
+        if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and 
+           (nameLower:find("coin") or nameLower:find("cash") or nameLower:find("money") or nameLower:find("$") or nameLower:find("gem")) then
+            
+            local dist = (root.Position - obj.Position).Magnitude
+            if dist < 150 then
                 pcall(function()
-                    obj.CFrame = root.CFrame + Vector3.new(0, 5, 0)
+                    obj.CFrame = root.CFrame
                 end)
             end
         end
     end
 end)
 
--- Smart Auto Rebirth (only when ready)
+-- === SMART AUTO REBIRTH ===
 spawn(function()
-    while autoRebirth and wait(8) do  -- Check less often
+    while autoRebirth and wait(6) do
         pcall(function()
-            -- Look for rebirth button
-            local rebirthGui = LocalPlayer.PlayerGui:FindFirstChild("RebirthButton", true) 
-                           or LocalPlayer.PlayerGui:FindFirstChild("Rebirth", true)
-                           or LocalPlayer.PlayerGui:FindFirstChild("rebirth", true)
-            
-            if rebirthGui and rebirthGui.Visible and rebirthGui:IsA("TextButton") then
-                rebirthGui:Activate()
-                print("✅ Rebirth triggered!")
-                wait(3)  -- Small cooldown after rebirth
+            -- Search for rebirth button in PlayerGui
+            for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
+                local n = gui.Name:lower()
+                if (n:find("rebirth") or n:find("reborn")) and gui:IsA("TextButton") and gui.Visible then
+                    gui:Activate()
+                    print("✅ Rebirth triggered!")
+                    wait(4)
+                    break
+                end
             end
         end)
     end
 end)
 
--- Auto Zone Travel (walks forward + occasional teleport)
+-- === AUTO ZONE / MAP PROGRESS ===
 spawn(function()
-    while wait(4) do
+    while wait(3) do
         local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if root then
-            -- Move forward to next zones
-            root.CFrame = root.CFrame + root.CFrame.LookVector * 80
-            currentZone = currentZone + 1
-            print("Moving to zone area", currentZone)
+            -- Strong forward push + slight upward for obstacles
+            root.CFrame = root.CFrame * CFrame.new(0, 0, -120)  -- Move forward aggressively
+            print("Pushing to next zone...")
         end
     end
 end)
 
--- Control GUI
+-- === CONTROL GUI ===
 local sg = Instance.new("ScreenGui")
 sg.ResetOnSpawn = false
 sg.Parent = LocalPlayer.PlayerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 160)
-frame.Position = UDim2.new(0, 30, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+frame.Size = UDim2.new(0, 300, 0, 180)
+frame.Position = UDim2.new(0, 30, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 frame.Parent = sg
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,40)
-title.Text = "Grok Auto Farm v2"
-title.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+title.Text = "Grok Auto Farm v3"
+title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
 title.TextScaled = true
 title.Parent = frame
 
--- Toggles
-local function makeToggle(text, y, default)
+local function createToggle(txt, posY, enabled)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9,0,0,35)
-    btn.Position = UDim2.new(0.05,0,0,y)
-    btn.BackgroundColor3 = default and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
-    btn.Text = text .. ": " .. (default and "ON" or "OFF")
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.Position = UDim2.new(0.05, 0, 0, posY)
+    btn.BackgroundColor3 = enabled and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(180, 0, 0)
+    btn.Text = txt .. ": " .. (enabled and "ON" or "OFF")
     btn.TextScaled = true
     btn.Parent = frame
     return btn
 end
 
-local collectToggle = makeToggle("Auto Collect", 45, true)
-collectToggle.MouseButton1Click:Connect(function()
+local collectBtn = createToggle("Auto Collect", 50, true)
+collectBtn.MouseButton1Click:Connect(function()
     collecting = not collecting
-    collectToggle.Text = "Auto Collect: " .. (collecting and "ON" or "OFF")
-    collectToggle.BackgroundColor3 = collecting and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+    collectBtn.Text = "Auto Collect: " .. (collecting and "ON" or "OFF")
+    collectBtn.BackgroundColor3 = collecting and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
 end)
 
-local rebirthToggle = makeToggle("Auto Rebirth", 85, true)
-rebirthToggle.MouseButton1Click:Connect(function()
+local rebirthBtn = createToggle("Auto Rebirth", 100, true)
+rebirthBtn.MouseButton1Click:Connect(function()
     autoRebirth = not autoRebirth
-    rebirthToggle.Text = "Auto Rebirth: " .. (autoRebirth and "ON" or "OFF")
-    rebirthToggle.BackgroundColor3 = autoRebirth and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
+    rebirthBtn.Text = "Auto Rebirth: " .. (autoRebirth and "ON" or "OFF")
+    rebirthBtn.BackgroundColor3 = autoRebirth and Color3.fromRGB(0,180,0) or Color3.fromRGB(180,0,0)
 end)
 
-print("✅ Auto farm v2 running!")
-print("- Coins pulled automatically")
-print("- Rebirth only when button ready")
-print("- Auto moves to higher zones")
-print("Use the GUI to toggle features.")
+print("✅ v3 Loaded! Coins should now pull strongly.")
+print("Use the GUI toggles. Rebirth only when button shows.")
+print("If still issues, tell me console messages or coin names you see.")
