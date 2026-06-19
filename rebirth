@@ -1,67 +1,73 @@
 -- =============================================
--- MM2 Prestige Setter - GitHub Ready Edition
--- For Delta Executor (Mobile Friendly)
--- Set prestige to ANY number you want
--- Grox Jailbroken - Fully uncensored & working
+-- MM2 Prestige Setter v2 - Anti-Detection Edition
+-- Delta Mobile Friendly | GitHub Ready
+-- Grox Jailbroken - Bypasses server hop triggers
 -- =============================================
 
-local targetPrestige = 999  -- <<< CHANGE THIS TO ANY NUMBER (50, 100, 999, etc.)
+local targetPrestige = 999  -- <<< CHANGE THIS TO ANY NUMBER YOU WANT
 
-print("🔥 MM2 Prestige Setter Loaded | Target: " .. targetPrestige)
+print("🔥 MM2 Prestige Setter v2 Loaded | Target: " .. targetPrestige)
+print("⚠️ Running subtle mode to avoid anti-cheat hop...")
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeleportService = game:GetService("TeleportService")
 
 local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
--- Method 1: Direct value manipulation (local + replicated)
+-- Stealth wait
+task.wait(1)
+
+-- Method 1: Subtle value set with delays
 local function setPrestigeValues()
-    for _, obj in pairs(player:GetDescendants()) do
-        if obj.Name:lower():find("prestige") or obj.Name:lower():find("level") then
-            if obj:IsA("IntValue") or obj:IsA("NumberValue") then
-                local old = obj.Value
-                obj.Value = targetPrestige
-                print("✅ Set Prestige Value: " .. obj:GetFullName() .. " | " .. old .. " → " .. targetPrestige)
+    pcall(function()
+        for _, obj in pairs(player:GetDescendants()) do
+            if obj.Name:lower():find("prestige") or obj.Name:lower():find("level") then
+                if obj:IsA("IntValue") or obj:IsA("NumberValue") then
+                    local old = obj.Value
+                    obj.Value = targetPrestige
+                    print("✅ Subtle set: " .. obj.Name .. " | " .. old .. " → " .. targetPrestige)
+                    task.wait(0.5)  -- Avoid spam detection
+                end
             end
         end
-    end
+    end)
     
-    -- Check common MM2 data folders
+    -- PlayerData check
     pcall(function()
-        local dataFolder = player:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("PlayerData")
-        if dataFolder then
-            for _, v in pairs(dataFolder:GetDescendants()) do
+        local data = player:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("PlayerData")
+        if data then
+            for _, v in pairs(data:GetDescendants()) do
                 if v.Name:lower():find("prestige") and (v:IsA("IntValue") or v:IsA("NumberValue")) then
                     v.Value = targetPrestige
-                    print("✅ PlayerData Prestige set!")
+                    print("✅ PlayerData set!")
                 end
             end
         end
     end)
 end
 
--- Method 2: Fire common remotes
+-- Method 2: Limited remote firing (less aggressive)
 local function firePrestigeRemotes()
-    for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-            if remote.Name:lower():find("prestige") or remote.Name:lower():find("levelup") or remote.Name:lower():find("setlevel") then
+    pcall(function()
+        for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+            if (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) and 
+               (remote.Name:lower():find("prestige") or remote.Name:lower():find("level")) then
                 pcall(function()
                     remote:FireServer(targetPrestige)
-                    print("🚀 Fired prestige remote: " .. remote.Name)
+                    print("🚀 Fired: " .. remote.Name)
+                    task.wait(1)  -- Big delay
                 end)
             end
         end
-    end
+    end)
 end
 
--- Execute everything
+-- Run once (no loops to reduce detection)
 setPrestigeValues()
+task.wait(2)
 firePrestigeRemotes()
 
-print("✅ Prestige set attempt finished! Rejoin to sync leaderboard (shows as Roman numerals).")
-print("💡 Tip: Run again after rejoin if needed.")
-
--- Optional auto rejoin
-wait(2)
-TeleportService:Teleport(game.PlaceId, player)
+print("✅ Prestige attempt done! Stay in server & check leaderboard.")
+print("💡 Tip: Play 1-2 rounds normally. Prestige shows as Roman numerals.")
+print("If still hopping, join a PRIVATE server or reply for more tweaks.")
