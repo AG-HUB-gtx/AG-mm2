@@ -1,84 +1,81 @@
--- Grok Coin Simulator X - Set Rebirth to 5,000
--- One-click rebirth setter
+-- Grok Coin Simulator X - Server-Side Rebirth 5,000
+-- Heavy remote spam for actual server change
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-print("🔥 Grok Rebirth Setter Loaded - Sets rebirth to 5000")
+print("🔥 Grok Server-Side Rebirth 5k v6 Loaded")
 
-local function setRebirthTo5000()
-    print("🔄 Searching for rebirth value...")
-    
-    -- Common locations
+local function serverRebirth5000()
+    print("🚀 Sending server-side rebirth 5000 requests...")
+
+    -- Massive remote spam
+    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+            pcall(function()
+                -- Common server rebirth patterns
+                remote:FireServer("rebirth", 5000)
+                remote:FireServer("Rebirth", 5000)
+                remote:FireServer("setrebirth", 5000)
+                remote:FireServer("SetRebirths", 5000)
+                remote:FireServer("rebirths", 5000)
+                remote:FireServer("addrebirths", 5000)
+                remote:FireServer("Reborn", 5000)
+                remote:FireServer("rebirth", 5000, true)
+                remote:FireServer("giveRebirths", LocalPlayer, 5000)
+            end)
+        end
+    end
+
+    -- Leaderstats visual backup
     local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
     if leaderstats then
         for _, stat in ipairs(leaderstats:GetChildren()) do
             if stat.Name:lower():find("rebirth") or stat.Name:lower():find("reborn") then
                 stat.Value = 5000
-                print("✅ Set rebirth to 5000 via leaderstats!")
-                return
+                print("✅ Visual leaderstats set:", stat.Name)
             end
         end
     end
-    
-    -- Deep search everywhere
-    for _, v in ipairs(LocalPlayer:GetDescendants()) do
-        if (v:IsA("IntValue") or v:IsA("NumberValue")) and 
-           (v.Name:lower():find("rebirth") or v.Name:lower():find("reborn")) then
-            v.Value = 5000
-            print("✅ Set rebirth to 5000 at:", v:GetFullName())
-            return
-        end
-    end
-    
-    -- Remote fallback (common in simulators)
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
-        if remote:IsA("RemoteEvent") then
-            pcall(function()
-                remote:FireServer("setrebirth", 5000)
-                remote:FireServer("rebirths", 5000)
-                remote:FireServer("SetRebirths", 5000)
-            end)
-        end
-    end
-    
-    print("✅ Rebirth set attempt complete. Check your rebirth count!")
+
+    print("✅ Server requests sent. Check leaderboard after a few seconds.")
 end
 
--- Simple GUI
+-- GUI
 local sg = Instance.new("ScreenGui")
 sg.ResetOnSpawn = false
 sg.Parent = LocalPlayer.PlayerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 320, 0, 140)
-frame.Position = UDim2.new(0, 30, 0.3, 0)
+frame.Size = UDim2.new(0, 360, 0, 180)
+frame.Position = UDim2.new(0, 30, 0.25, 0)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 frame.Parent = sg
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,40)
-title.Text = "Grok Rebirth Setter"
+title.Size = UDim2.new(1,0,0,45)
+title.Text = "Server-Side Rebirth 5,000"
 title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
 title.TextScaled = true
 title.Parent = frame
 
 local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0.9,0,0,60)
-btn.Position = UDim2.new(0.05,0,0,50)
+btn.Size = UDim2.new(0.9,0,0,80)
+btn.Position = UDim2.new(0.05,0,0,55)
 btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-btn.Text = "SET REBIRTH TO 5,000"
+btn.Text = "SEND SERVER REBIRTH 5,000"
 btn.TextScaled = true
 btn.Parent = frame
 
 btn.MouseButton1Click:Connect(function()
-    btn.Text = "Setting Rebirth..."
-    btn.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
-    setRebirthTo5000()
-    wait(1)
-    btn.Text = "SET REBIRTH TO 5,000"
+    btn.Text = "Sending to Server..."
+    btn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+    serverRebirth5000()
+    wait(2)
+    btn.Text = "SEND SERVER REBIRTH 5,000"
     btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
 end)
 
-print("✅ Script ready. Click the green button to set rebirth to 5k.")
+print("✅ v6 Server-Side script ready.")
+print("Click the button multiple times and watch the leaderboard.")
