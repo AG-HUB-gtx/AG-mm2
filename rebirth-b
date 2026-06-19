@@ -1,0 +1,80 @@
+-- Grok Coin Simulator X - Server-Side Rebirth 1 Billion
+-- Forces 1B rebirths on leaderboard
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+print("🔥 Grok Server-Side Rebirth 1B Loaded")
+
+local function forceRebirth1B()
+    print("🚀 Sending server-side 1 Billion rebirth requests...")
+
+    local target = 1000000000  -- 1B
+
+    -- Heavy remote spam
+    for _, remote in ipairs(ReplicatedStorage:GetDescendants()) do
+        if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+            pcall(function()
+                remote:FireServer("rebirth", target)
+                remote:FireServer("Rebirth", target)
+                remote:FireServer("setrebirth", target)
+                remote:FireServer("SetRebirths", target)
+                remote:FireServer("rebirths", target)
+                remote:FireServer("addrebirths", target)
+                remote:FireServer("Reborn", target)
+                remote:FireServer("giveRebirths", LocalPlayer, target)
+            end)
+        end
+    end
+
+    -- Leaderstats visual
+    local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+    if leaderstats then
+        for _, stat in ipairs(leaderstats:GetChildren()) do
+            if stat.Name:lower():find("rebirth") or stat.Name:lower():find("reborn") then
+                stat.Value = target
+                print("✅ Visual leaderstats set to 1B:", stat.Name)
+            end
+        end
+    end
+
+    print("✅ 1 Billion rebirth requests sent. Check the leaderboard!")
+end
+
+-- GUI
+local sg = Instance.new("ScreenGui")
+sg.ResetOnSpawn = false
+sg.Parent = LocalPlayer.PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 380, 0, 180)
+frame.Position = UDim2.new(0, 30, 0.25, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+frame.Parent = sg
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,45)
+title.Text = "Server-Side Rebirth 1 Billion"
+title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+title.TextScaled = true
+title.Parent = frame
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0.9,0,0,80)
+btn.Position = UDim2.new(0.05,0,0,55)
+btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+btn.Text = "FORCE 1 BILLION REBIRTHS\n(Leaderboard)"
+btn.TextScaled = true
+btn.Parent = frame
+
+btn.MouseButton1Click:Connect(function()
+    btn.Text = "Sending 1B to Server..."
+    btn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+    forceRebirth1B()
+    wait(2)
+    btn.Text = "FORCE 1 BILLION REBIRTHS\n(Leaderboard)"
+    btn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+end)
+
+print("✅ Script ready. Click the button multiple times.")
