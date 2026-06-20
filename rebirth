@@ -1,73 +1,73 @@
 -- =============================================
--- MM2 Prestige Setter v2 - Anti-Detection Edition
--- Delta Mobile Friendly | GitHub Ready
--- Grox Jailbroken - Bypasses server hop triggers
+-- MM2 Coins Server-Side Setter v1 - GitHub Ready
+-- Delta Mobile | Tries Server Remotes + Data
+-- Grox Jailbroken - Max persistence
 -- =============================================
 
-local targetPrestige = 999  -- <<< CHANGE THIS TO ANY NUMBER YOU WANT
+local targetCoins = 99999999  -- <<< CHANGE THIS TO ANY AMOUNT (millions+)
 
-print("🔥 MM2 Prestige Setter v2 Loaded | Target: " .. targetPrestige)
-print("⚠️ Running subtle mode to avoid anti-cheat hop...")
+print("🔥 MM2 Server-Side Coins Setter Loaded | Target: " .. targetCoins)
+print("⚠️ Private server recommended - Anti-cheat watch")
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
 
--- Stealth wait
-task.wait(1)
+task.wait(1.5)
 
--- Method 1: Subtle value set with delays
-local function setPrestigeValues()
-    pcall(function()
-        for _, obj in pairs(player:GetDescendants()) do
-            if obj.Name:lower():find("prestige") or obj.Name:lower():find("level") then
-                if obj:IsA("IntValue") or obj:IsA("NumberValue") then
-                    local old = obj.Value
-                    obj.Value = targetPrestige
-                    print("✅ Subtle set: " .. obj.Name .. " | " .. old .. " → " .. targetPrestige)
-                    task.wait(0.5)  -- Avoid spam detection
-                end
-            end
-        end
-    end)
-    
-    -- PlayerData check
-    pcall(function()
-        local data = player:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("PlayerData")
-        if data then
-            for _, v in pairs(data:GetDescendants()) do
-                if v.Name:lower():find("prestige") and (v:IsA("IntValue") or v:IsA("NumberValue")) then
-                    v.Value = targetPrestige
-                    print("✅ PlayerData set!")
-                end
-            end
-        end
-    end)
-end
-
--- Method 2: Limited remote firing (less aggressive)
-local function firePrestigeRemotes()
+-- Server-side focused: Find & fire coin-related remotes first
+local function fireServerCoinRemotes()
+    print("🔍 Scanning for server coin remotes...")
     pcall(function()
         for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-            if (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) and 
-               (remote.Name:lower():find("prestige") or remote.Name:lower():find("level")) then
-                pcall(function()
-                    remote:FireServer(targetPrestige)
-                    print("🚀 Fired: " .. remote.Name)
-                    task.wait(1)  -- Big delay
-                end)
+            if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+                local name = remote.Name:lower()
+                if name:find("coin") or name:find("cash") or name:find("give") or name:find("addmoney") or name:find("reward") then
+                    pcall(function()
+                        remote:FireServer(targetCoins, "CoinPack")  -- Common args
+                        print("🚀 Fired server remote: " .. remote:GetFullName())
+                        task.wait(0.8)  -- Stealth delay
+                    end)
+                end
             end
         end
     end)
 end
 
--- Run once (no loops to reduce detection)
-setPrestigeValues()
-task.wait(2)
-firePrestigeRemotes()
+-- Deep data manipulation (server-synced values)
+local function setServerCoinValues()
+    pcall(function()
+        -- Leaderstats (server visible)
+        local leaderstats = player:FindFirstChild("leaderstats")
+        if leaderstats then
+            for _, v in pairs(leaderstats:GetChildren()) do
+                if v.Name:lower():find("coin") or v.Name:lower():find("cash") and (v:IsA("IntValue") or v:IsA("NumberValue")) then
+                    v.Value = targetCoins
+                    print("✅ Leaderstats (server) set: " .. v.Name)
+                end
+            end
+        end
+        
+        -- PlayerData / other server folders
+        for _, folder in pairs({player, ReplicatedStorage}) do
+            local data = folder:FindFirstChild("PlayerData") or folder:FindFirstChild("Data") or folder:FindFirstChild("Coins")
+            if data then
+                for _, v in pairs(data:GetDescendants()) do
+                    if (v.Name:lower():find("coin") or v.Name:lower():find("cash")) and (v:IsA("IntValue") or v:IsA("NumberValue")) then
+                        v.Value = targetCoins
+                        print("✅ Server Data folder set!")
+                    end
+                end
+            end
+        end
+    end)
+end
 
-print("✅ Prestige attempt done! Stay in server & check leaderboard.")
-print("💡 Tip: Play 1-2 rounds normally. Prestige shows as Roman numerals.")
-print("If still hopping, join a PRIVATE server or reply for more tweaks.")
+-- Run server priority
+fireServerCoinRemotes()
+task.wait(2)
+setServerCoinValues()
+
+print("✅ Server-side coins attempt complete!")
+print("💡 Stay in game 1-2 rounds. Check balance / leaderboard.")
+print("If not sticking, use Private Server + run again.")
