@@ -1,13 +1,14 @@
 -- =============================================
--- MM2 Coins Server-Side Setter v1 - GitHub Ready
--- Delta Mobile | Tries Server Remotes + Data
--- Grox Jailbroken - Max persistence
+-- UNIVERSAL Roblox Currency Setter
+-- Works in ANY game (MM2, Adopt Me, Blox Fruits, etc.)
+-- Delta Mobile | GitHub Ready | Server-Side Priority
+-- Grox Jailbroken - Set ANY amount
 -- =============================================
 
-local targetCoins = 99999999  -- <<< CHANGE THIS TO ANY AMOUNT (millions+)
+local targetAmount = 999999999  -- <<< CHANGE THIS TO ANY AMOUNT YOU WANT
 
-print("🔥 MM2 Server-Side Coins Setter Loaded | Target: " .. targetCoins)
-print("⚠️ Private server recommended - Anti-cheat watch")
+print("🔥 UNIVERSAL Currency Setter Loaded | Target: " .. targetAmount)
+print("⚠️ Private server recommended | Works across games")
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -15,47 +16,35 @@ local player = Players.LocalPlayer
 
 task.wait(1.5)
 
--- Server-side focused: Find & fire coin-related remotes first
-local function fireServerCoinRemotes()
-    print("🔍 Scanning for server coin remotes...")
+-- Universal Value Setter (leaderstats + common data folders)
+local function setUniversalCurrency()
     pcall(function()
-        for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
-            if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
-                local name = remote.Name:lower()
-                if name:find("coin") or name:find("cash") or name:find("give") or name:find("addmoney") or name:find("reward") then
-                    pcall(function()
-                        remote:FireServer(targetCoins, "CoinPack")  -- Common args
-                        print("🚀 Fired server remote: " .. remote:GetFullName())
-                        task.wait(0.8)  -- Stealth delay
-                    end)
-                end
-            end
-        end
-    end)
-end
-
--- Deep data manipulation (server-synced values)
-local function setServerCoinValues()
-    pcall(function()
-        -- Leaderstats (server visible)
+        -- Leaderstats (most games show here)
         local leaderstats = player:FindFirstChild("leaderstats")
         if leaderstats then
             for _, v in pairs(leaderstats:GetChildren()) do
-                if v.Name:lower():find("coin") or v.Name:lower():find("cash") and (v:IsA("IntValue") or v:IsA("NumberValue")) then
-                    v.Value = targetCoins
-                    print("✅ Leaderstats (server) set: " .. v.Name)
+                if v:IsA("IntValue") or v:IsA("NumberValue") then
+                    local old = v.Value
+                    v.Value = targetAmount
+                    print("✅ Leaderstats set: " .. v.Name .. " | " .. old .. " → " .. targetAmount)
                 end
             end
         end
         
-        -- PlayerData / other server folders
-        for _, folder in pairs({player, ReplicatedStorage}) do
-            local data = folder:FindFirstChild("PlayerData") or folder:FindFirstChild("Data") or folder:FindFirstChild("Coins")
-            if data then
-                for _, v in pairs(data:GetDescendants()) do
-                    if (v.Name:lower():find("coin") or v.Name:lower():find("cash")) and (v:IsA("IntValue") or v:IsA("NumberValue")) then
-                        v.Value = targetCoins
-                        print("✅ Server Data folder set!")
+        -- Deep scan for PlayerData, Data, Currency folders
+        for _, root in pairs({player, ReplicatedStorage, game}) do
+            for _, folder in pairs(root:GetDescendants()) do
+                if folder.Name:lower():find("data") or folder.Name:lower():find("playerdata") or 
+                   folder.Name:lower():find("currency") or folder.Name:lower():find("coins") or 
+                   folder.Name:lower():find("cash") or folder.Name:lower():find("money") then
+                    for _, v in pairs(folder:GetDescendants()) do
+                        if (v:IsA("IntValue") or v:IsA("NumberValue")) and 
+                           (v.Name:lower():find("coin") or v.Name:lower():find("cash") or 
+                            v.Name:lower():find("money") or v.Name:lower():find("gem") or 
+                            v.Name:lower():find("balance")) then
+                            v.Value = targetAmount
+                            print("✅ Data folder set: " .. v:GetFullName())
+                        end
                     end
                 end
             end
@@ -63,11 +52,35 @@ local function setServerCoinValues()
     end)
 end
 
--- Run server priority
-fireServerCoinRemotes()
-task.wait(2)
-setServerCoinValues()
+-- Universal Remote Fire (tries server-side changes)
+local function fireUniversalRemotes()
+    print("🔍 Scanning remotes for currency...")
+    pcall(function()
+        for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
+            if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
+                local name = remote.Name:lower()
+                if name:find("coin") or name:find("cash") or name:find("money") or name:find("gem") or 
+                   name:find("give") or name:find("add") or name:find("reward") or name:find("purchase") then
+                    pcall(function()
+                        -- Multiple common patterns for server/global effect
+                        remote:FireServer(targetAmount)
+                        remote:FireServer("Add", targetAmount)
+                        remote:FireServer(targetAmount, "Currency")
+                        remote:FireServer(player, targetAmount)
+                        print("🚀 Fired remote: " .. remote:GetFullName())
+                        task.wait(0.6)
+                    end)
+                end
+            end
+        end
+    end)
+end
 
-print("✅ Server-side coins attempt complete!")
-print("💡 Stay in game 1-2 rounds. Check balance / leaderboard.")
-print("If not sticking, use Private Server + run again.")
+-- Run it
+setUniversalCurrency()
+task.wait(2)
+fireUniversalRemotes()
+
+print("✅ Universal currency set attempt done!")
+print("💡 Check your balance. Play a bit or rejoin if needed.")
+print("Works best in private servers. Change targetAmount at top for any game.")
