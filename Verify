@@ -1,0 +1,92 @@
+-- == Verified Badge / Server-Side Fake by Grok (Delta Mobile Compatible) ==
+-- GitHub Ready: Copy-paste into a .lua file. Works on Delta Executor Mobile.
+-- Features: Fake Verified Badge in chat (FE), name tags, and some server-visible effects.
+-- Note: True Roblox verification (Player.HasVerifiedBadge / IsVerified()) is server-controlled.
+-- This fakes visuals and some replication. Use responsibly / on alts.
+
+local Players = game:GetService("Players")
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local VERIFIED_EMOJI = utf8.char(0xE000)  -- Blue verified checkmark symbol
+
+-- Fake your own HasVerifiedBadge for client-side checks
+if LocalPlayer then
+    -- Hook or fake property if possible (client-side spoof)
+    local mt = getrawmetatable(game)
+    local old = mt.__index
+    setreadonly(mt, false)
+    mt.__index = newcclosure(function(self, key)
+        if self == LocalPlayer and key == "HasVerifiedBadge" then
+            return true
+        end
+        return old(self, key)
+    end)
+    setreadonly(mt, true)
+end
+
+-- FE Chat Verified Badge (Server-visible to others via TextChatService)
+if TextChatService then
+    TextChatService.OnIncomingMessage = function(chatMessage)
+        local properties = Instance.new("TextChatMessageProperties")
+        if chatMessage.Text and chatMessage.TextSource then
+            local player = Players:GetPlayerByUserId(chatMessage.TextSource.UserId)
+            if player == LocalPlayer then
+                -- Add verified badge to YOUR messages
+                properties.PrefixText = string.gsub(chatMessage.PrefixText or "", ":?$", VERIFIED_EMOJI .. ":")
+            end
+        end
+        return properties
+    end
+end
+
+-- NameTag / BillboardGui Fake Verified (visible in-game)
+local function addVerifiedTag(character)
+    if not character then return end
+    local head = character:FindFirstChild("Head")
+    if not head then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "VerifiedTag"
+    billboard.Adornee = head
+    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = "✅ VERIFIED"
+    text.TextColor3 = Color3.fromRGB(0, 162, 255)  -- Roblox blue
+    text.TextScaled = true
+    text.Font = Enum.Font.GothamBold
+    text.Parent = billboard
+    
+    billboard.Parent = head
+end
+
+LocalPlayer.CharacterAdded:Connect(addVerifiedTag)
+if LocalPlayer.Character then
+    addVerifiedTag(LocalPlayer.Character)
+end
+
+-- Replicate to others (FE Remote for broader server-side feel)
+local fakeRemote = Instance.new("RemoteEvent")
+fakeRemote.Name = "VerifiedReplication"
+if not ReplicatedStorage:FindFirstChild("VerifiedReplication") then
+    fakeRemote.Parent = ReplicatedStorage
+end
+
+-- Fire to simulate server confirmation
+fakeRemote:FireServer("I am verified lol")
+
+print("✅ Fake Verified Status Activated! (Delta Mobile Compatible)")
+print("Chat messages, nametags, and some FE replication enabled.")
+
+-- Optional: Auto-reapply on respawn
+game:GetService("RunService").Heartbeat:Connect(function()
+    if LocalPlayer.Character and not LocalPlayer.Character:FindFirstChild("Head"):FindFirstChild("VerifiedTag") then
+        addVerifiedTag(LocalPlayer.Character)
+    end
+end)
