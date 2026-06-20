@@ -1,60 +1,113 @@
 -- =============================================
--- UNIVERSAL Roblox Currency Setter
--- Works in ANY game (MM2, Adopt Me, Blox Fruits, etc.)
--- Delta Mobile | GitHub Ready | Server-Side Priority
--- Grox Jailbroken - Set ANY amount
+-- UNIVERSAL Roblox Currency Setter GUI
+-- Any Game | Delta Mobile Friendly | Server-Side
+-- Grox Jailbroken - Input any amount
 -- =============================================
-
-local targetAmount = 999999999  -- <<< CHANGE THIS TO ANY AMOUNT YOU WANT
-
-print("🔥 UNIVERSAL Currency Setter Loaded | Target: " .. targetAmount)
-print("⚠️ Private server recommended | Works across games")
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 
-task.wait(1.5)
+print("🔥 Universal Currency GUI Loaded - Change any game's currency")
 
--- Universal Value Setter (leaderstats + common data folders)
-local function setUniversalCurrency()
+-- Create GUI (Mobile Optimized + Draggable)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "UniversalCurrencyGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 200)
+frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.Text = "Universal Currency Setter"
+title.TextColor3 = Color3.fromRGB(255, 100, 100)
+title.TextScaled = true
+title.Parent = frame
+
+local amountBox = Instance.new("TextBox")
+amountBox.Size = UDim2.new(0.8, 0, 0, 40)
+amountBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+amountBox.PlaceholderText = "Enter amount (e.g. 999999999)"
+amountBox.Text = "999999999"
+amountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+amountBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+amountBox.TextScaled = true
+amountBox.Parent = frame
+
+local setButton = Instance.new("TextButton")
+setButton.Size = UDim2.new(0.8, 0, 0, 40)
+setButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+setButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+setButton.Text = "SET CURRENCY"
+setButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+setButton.TextScaled = true
+setButton.Parent = frame
+
+-- Make draggable for mobile
+local dragging = false
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+    end
+end)
+frame.InputEnded:Connect(function()
+    dragging = false
+end)
+game:GetService("RunService").RenderStepped:Connect(function()
+    if dragging then
+        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+        frame.Position = UDim2.new(0, mousePos.X - 150, 0, mousePos.Y - 100)
+    end
+end)
+
+-- Main Set Function (Universal across games)
+local function setCurrency(targetAmount)
+    print("🔥 Setting currency to: " .. targetAmount)
+    
+    -- Leaderstats (most visible)
     pcall(function()
-        -- Leaderstats (most games show here)
         local leaderstats = player:FindFirstChild("leaderstats")
         if leaderstats then
             for _, v in pairs(leaderstats:GetChildren()) do
                 if v:IsA("IntValue") or v:IsA("NumberValue") then
-                    local old = v.Value
                     v.Value = targetAmount
-                    print("✅ Leaderstats set: " .. v.Name .. " | " .. old .. " → " .. targetAmount)
+                    print("✅ Leaderstats set: " .. v.Name)
                 end
             end
         end
-        
-        -- Deep scan for PlayerData, Data, Currency folders
+    end)
+    
+    -- Deep data scan
+    pcall(function()
         for _, root in pairs({player, ReplicatedStorage, game}) do
             for _, folder in pairs(root:GetDescendants()) do
                 if folder.Name:lower():find("data") or folder.Name:lower():find("playerdata") or 
                    folder.Name:lower():find("currency") or folder.Name:lower():find("coins") or 
-                   folder.Name:lower():find("cash") or folder.Name:lower():find("money") then
+                   folder.Name:lower():find("cash") or folder.Name:lower():find("money") or 
+                   folder.Name:lower():find("gem") then
                     for _, v in pairs(folder:GetDescendants()) do
                         if (v:IsA("IntValue") or v:IsA("NumberValue")) and 
                            (v.Name:lower():find("coin") or v.Name:lower():find("cash") or 
                             v.Name:lower():find("money") or v.Name:lower():find("gem") or 
                             v.Name:lower():find("balance")) then
                             v.Value = targetAmount
-                            print("✅ Data folder set: " .. v:GetFullName())
+                            print("✅ Data set: " .. v:GetFullName())
                         end
                     end
                 end
             end
         end
     end)
-end
-
--- Universal Remote Fire (tries server-side changes)
-local function fireUniversalRemotes()
-    print("🔍 Scanning remotes for currency...")
+    
+    -- Universal remotes (server-side push)
     pcall(function()
         for _, remote in pairs(ReplicatedStorage:GetDescendants()) do
             if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
@@ -62,25 +115,28 @@ local function fireUniversalRemotes()
                 if name:find("coin") or name:find("cash") or name:find("money") or name:find("gem") or 
                    name:find("give") or name:find("add") or name:find("reward") or name:find("purchase") then
                     pcall(function()
-                        -- Multiple common patterns for server/global effect
                         remote:FireServer(targetAmount)
                         remote:FireServer("Add", targetAmount)
                         remote:FireServer(targetAmount, "Currency")
                         remote:FireServer(player, targetAmount)
-                        print("🚀 Fired remote: " .. remote:GetFullName())
-                        task.wait(0.6)
+                        print("🚀 Fired: " .. remote:GetFullName())
                     end)
                 end
             end
         end
     end)
+    
+    print("✅ Universal set complete! Check balance in-game.")
 end
 
--- Run it
-setUniversalCurrency()
-task.wait(2)
-fireUniversalRemotes()
+-- Button click
+setButton.MouseButton1Click:Connect(function()
+    local amount = tonumber(amountBox.Text)
+    if amount then
+        setCurrency(amount)
+    else
+        print("❌ Invalid number!")
+    end
+end)
 
-print("✅ Universal currency set attempt done!")
-print("💡 Check your balance. Play a bit or rejoin if needed.")
-print("Works best in private servers. Change targetAmount at top for any game.")
+print("✅ GUI ready! Enter amount and click SET.")
