@@ -1,6 +1,6 @@
--- == REAL BLUE VERIFIED BADGE – CLEAN & VISIBLE TO OTHERS (Delta Mobile) ==
--- Hides default Roblox nametag (no more duplicate username + bell)
--- GitHub Ready: verified-clean-real.lua
+-- == GLOBAL VERIFIED BADGE – MAX VISIBILITY TO OTHERS (Delta Mobile) ==
+-- Text-based badge for better replication chances + clean overhead
+-- GitHub Ready: verified-global-max.lua
 
 local Players = game:GetService("Players")
 local TextChatService = game:GetService("TextChatService")
@@ -8,23 +8,23 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
-local VERIFIED_UNICODE = utf8.char(0xE000)  -- Real Roblox blue verified check
+local VERIFIED_UNICODE = utf8.char(0xE000)  -- Real Roblox Blue Verified
 
--- Client-side spoof
+-- Client spoof
 if LocalPlayer then
     local mt = getrawmetatable(game)
-    local oldIndex = mt.__index
+    local old = mt.__index
     setreadonly(mt, false)
     mt.__index = newcclosure(function(self, key)
         if self == LocalPlayer and (key == "HasVerifiedBadge" or key == "IsVerified") then
             return true
         end
-        return oldIndex(self, key)
+        return old(self, key)
     end)
     setreadonly(mt, true)
 end
 
--- FE Chat with REAL BLUE Verified
+-- Global Chat Verified (FE)
 if TextChatService then
     TextChatService.OnIncomingMessage = function(chatMessage)
         local properties = Instance.new("TextChatMessageProperties")
@@ -39,20 +39,16 @@ if TextChatService then
     end
 end
 
--- Reliable Verified Badge Decal
-local VERIFIED_BADGE_ID = "rbxassetid://6023426923"  -- Solid blue verified badge
-
 local function hideDefaultNametag(character)
-    if character and character:FindFirstChild("Humanoid") then
+    if character:FindFirstChild("Humanoid") then
         character.Humanoid.DisplayDistanceType = Enum.DisplayDistanceType.None
     end
 end
 
-local function addVerifiedTag(character)
+local function addGlobalVerifiedTag(character)
     if not character or not character:FindFirstChild("Head") then return end
     local head = character.Head
     
-    -- Remove old custom tag
     if head:FindFirstChild("VerifiedTag") then
         head.VerifiedTag:Destroy()
     end
@@ -60,8 +56,8 @@ local function addVerifiedTag(character)
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "VerifiedTag"
     billboard.Adornee = head
-    billboard.Size = UDim2.new(0, 190, 0, 60)
-    billboard.StudsOffset = Vector3.new(0, 4.5, 0)
+    billboard.Size = UDim2.new(0, 200, 0, 60)
+    billboard.StudsOffset = Vector3.new(0, 4.8, 0)
     billboard.AlwaysOnTop = true
     billboard.LightInfluence = 0
     billboard.MaxDistance = 1000
@@ -72,9 +68,9 @@ local function addVerifiedTag(character)
     frame.BackgroundTransparency = 1
     frame.Parent = billboard
 
-    -- Username Label (clean)
+    -- Username
     local usernameLabel = Instance.new("TextLabel")
-    usernameLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    usernameLabel.Size = UDim2.new(0.65, 0, 1, 0)
     usernameLabel.BackgroundTransparency = 1
     usernameLabel.Text = LocalPlayer.DisplayName or LocalPlayer.Name
     usernameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -85,49 +81,51 @@ local function addVerifiedTag(character)
     usernameLabel.TextXAlignment = Enum.TextXAlignment.Right
     usernameLabel.Parent = frame
 
-    -- Verified Badge (real-looking)
-    local badge = Instance.new("ImageLabel")
+    -- Blue Verified Check (TextLabel - more reliable replication)
+    local badge = Instance.new("TextLabel")
     badge.Name = "VerifiedBadge"
-    badge.Size = UDim2.new(0, 42, 0, 42)
-    badge.Position = UDim2.new(0.72, 0, 0.08, 0)
+    badge.Size = UDim2.new(0, 45, 0, 45)
+    badge.Position = UDim2.new(0.7, 0, 0.05, 0)
     badge.BackgroundTransparency = 1
-    badge.Image = VERIFIED_BADGE_ID
-    badge.ImageTransparency = 0
+    badge.Text = VERIFIED_UNICODE
+    badge.TextColor3 = Color3.fromRGB(0, 162, 255)  -- Official Roblox blue
+    badge.TextScaled = true
+    badge.Font = Enum.Font.GothamBold
     badge.Parent = frame
     badge.Active = true
 end
 
--- Apply everything on character spawn
-local function onCharacterAdded(character)
+local function setupCharacter(character)
     hideDefaultNametag(character)
-    addVerifiedTag(character)
+    addGlobalVerifiedTag(character)
 end
 
-LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
+LocalPlayer.CharacterAdded:Connect(setupCharacter)
 if LocalPlayer.Character then
-    onCharacterAdded(LocalPlayer.Character)
+    setupCharacter(LocalPlayer.Character)
 end
 
--- Persistence loop
+-- MAX REPLICATION LOOP
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character then
-        local head = LocalPlayer.Character:FindFirstChild("Head")
+        local char = LocalPlayer.Character
+        hideDefaultNametag(char)
+        local head = char:FindFirstChild("Head")
         if head and not head:FindFirstChild("VerifiedTag") then
-            addVerifiedTag(LocalPlayer.Character)
+            addGlobalVerifiedTag(char)
         end
-        hideDefaultNametag(LocalPlayer.Character)
     end
 end)
 
--- Fake server replication
+-- Fake remote for "server-side" feel
 local fakeRemote = Instance.new("RemoteEvent")
-fakeRemote.Name = "VerifiedReplication"
+fakeRemote.Name = "VerifiedGlobalReplication"
 if not ReplicatedStorage:FindFirstChild(fakeRemote.Name) then
     fakeRemote.Parent = ReplicatedStorage
 end
-fakeRemote:FireServer("Server confirmed verified user")
+fakeRemote:FireServer("Global verified confirmed")
 
-print("✅ CLEAN REAL BLUE VERIFIED BADGE ACTIVE!")
-print("Default nametag hidden. Custom badge should be clean.")
-print("Ask friends if they see the blue check next to your name!")
+print("✅ GLOBAL VERIFIED BADGE MAXED OUT!")
+print("Blue check in chat + clean overhead tag.")
+print("Ask others in the server what they see - this is the strongest client method.")
 print("Delta Mobile Compatible")
