@@ -1,145 +1,269 @@
--- MM2 AG Hub Script - Fully Working v5
-
-if not game:IsLoaded() then game:GetService("StarterGui"):SetCore("SendNotification", {Title = "Loading...", Text = "Waiting for game...", Duration = 5}) game.Loaded:Wait() end
+-- AG MM2 v5 - Enhanced (ESP + Shoot + TP + Knife Throw)
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 
-local LocalPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
 
-print("🔥 Grok MM2 AG Hub Loaded")
-
--- ESP Container
-local ESP = {}
-ESP.__index = ESP
-
-function ESP.new()
-    local self = setmetatable({}, ESP)
-    self.Connections = {}
-    return self
-end
-
-function ESP:Add(obj, config)
-    -- Simple Billboard GUI for ESP
-    local Billboard = Instance.new("BillboardGui")
-    Billboard.Adornee = obj
-    Billboard.Size = UDim2.new(0, 200, 0, 50)
-    Billboard.StudsOffset = Vector3.new(0, 3, 0)
-    Billboard.Parent = obj
-
-    local Text = Instance.new("TextLabel")
-    Text.Size = UDim2.new(1, 0, 1, 0)
-    Text.BackgroundTransparency = 1
-    Text.Text = config.LabelText or obj.Name
-    Text.TextColor3 = config.AccentColor or Color3.new(1, 0, 0)
-    Text.TextScaled = true
-    Text.Parent = Billboard
-end
-
-local esp = ESP.new()
-
--- Core Functions
-local function findMurderer()
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Backpack:FindFirstChild("Knife") or (p.Character and p.Character:FindFirstChild("Knife")) then
-            return p
-        end
-    end
-    return nil
-end
-
-local function findSheriff()
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Backpack:FindFirstChild("Gun") or (p.Character and p.Character:FindFirstChild("Gun")) then
-            return p
-        end
-    end
-    return nil
-end
-
--- ESP Toggle
-local playerESP = false
-
-local function togglePlayerESP(state)
-    playerESP = state
-    if state then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                esp:Add(p.Character.HumanoidRootPart, {LabelText = p.Name, AccentColor = Color3.new(0,1,0)})
-            end
-        end
-    else
-        -- Clear ESP (simplified)
-        for _, v in ipairs(Workspace:GetDescendants()) do
-            if v:IsA("BillboardGui") then v:Destroy() end
-        end
-    end
-end
-
--- Auto Shoot
-local autoShoot = false
-
-RunService.Heartbeat:Connect(function()
-    if autoShoot and findSheriff() == LocalPlayer then
-        local murderer = findMurderer()
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
-            local gun = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun")
-            if gun then
-                -- Simple shoot simulation
-                local targetPos = murderer.Character.HumanoidRootPart.Position
-                gun.Shoot:FireServer(targetPos)
-            end
-        end
-    end
-end)
-
--- GUI
 local sg = Instance.new("ScreenGui")
 sg.ResetOnSpawn = false
-sg.Parent = LocalPlayer.PlayerGui
+sg.Parent = player.PlayerGui
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400)
-frame.Position = UDim2.new(0.05, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-frame.Parent = sg
+-- AG Button
+local AGButton = Instance.new("TextButton")
+AGButton.Size = UDim2.new(0, 90, 0, 90)
+AGButton.Position = UDim2.new(0, 20, 0, 100)
+AGButton.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
+AGButton.Text = "AG"
+AGButton.TextColor3 = Color3.new(1,1,1)
+AGButton.TextScaled = true
+AGButton.Font = Enum.Font.GothamBold
+AGButton.Parent = sg
+Instance.new("UICorner", AGButton).CornerRadius = UDim.new(0, 20)
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 50)
-title.Text = "Grok MM2 AG Hub"
-title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
-title.TextScaled = true
-title.Parent = frame
+-- Main Panel
+local MainPanel = Instance.new("Frame")
+MainPanel.Size = UDim2.new(0, 340, 0, 550)
+MainPanel.Position = UDim2.new(0.5, -170, 0.15, 0)
+MainPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainPanel.Visible = false
+MainPanel.Parent = sg
+Instance.new("UICorner", MainPanel).CornerRadius = UDim.new(0, 12)
 
-local function createToggle(txt, y, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 40)
-    btn.Position = UDim2.new(0.05, 0, 0, y)
-    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-    btn.Text = txt
-    btn.TextScaled = true
-    btn.Parent = frame
-    btn.MouseButton1Click:Connect(callback)
-    return btn
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 50)
+TopBar.BackgroundColor3 = Color3.fromRGB(0, 160, 255)
+TopBar.Parent = MainPanel
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
+
+local Title = Instance.new("TextLabel")
+Title.Text = "AG MM2 v5"
+Title.Size = UDim2.new(1, -60, 1, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1,1,1)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.Parent = TopBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Text = "✕"
+CloseBtn.Size = UDim2.new(0, 50, 1, 0)
+CloseBtn.Position = UDim2.new(1, -50, 0, 0)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.TextScaled = true
+CloseBtn.Parent = TopBar
+
+AGButton.MouseButton1Click:Connect(function() MainPanel.Visible = not MainPanel.Visible end)
+CloseBtn.MouseButton1Click:Connect(function() MainPanel.Visible = false end)
+
+-- Draggable
+local function makeDraggable(obj)
+    local dragging, startDrag
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            startDrag = input.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = input.Position - startDrag
+            obj.Position = UDim2.new(obj.Position.X.Scale, obj.Position.X.Offset + delta.X, obj.Position.Y.Scale, obj.Position.Y.Offset + delta.Y)
+            startDrag = input.Position
+        end
+    end)
+    obj.InputEnded:Connect(function() dragging = false end)
 end
 
-createToggle("Player ESP", 60, function()
-    togglePlayerESP(not playerESP)
-end)
+makeDraggable(AGButton)
+makeDraggable(TopBar)
 
-createToggle("Auto Shoot (Sheriff)", 110, function()
-    autoShoot = not autoShoot
-end)
+-- ==================== ESP ====================
+local highlights = {}
+local espConn
 
-createToggle("Knife Throw (Murderer)", 160, function()
-    local murderer = findMurderer()
-    if murderer == LocalPlayer and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Knife") then
-        -- Basic knife throw simulation
-        print("Knife thrown toward nearest player")
+local function updateESP()
+    for _, hl in pairs(highlights) do if hl and hl.Parent then hl:Destroy() end end
+    highlights = {}
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local color = Color3.fromRGB(0, 255, 0)
+
+            if plr.Character:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
+                color = Color3.fromRGB(255, 0, 0)
+            elseif plr.Character:FindFirstChild("Gun") or plr.Backpack:FindFirstChild("Gun") then
+                color = Color3.fromRGB(0, 100, 255)
+            end
+
+            local hl = Instance.new("Highlight")
+            hl.Adornee = plr.Character
+            hl.FillColor = color
+            hl.OutlineColor = color
+            hl.FillTransparency = 0.6
+            hl.OutlineTransparency = 0
+            hl.Parent = plr.Character
+            table.insert(highlights, hl)
+        end
+    end
+end
+
+-- ==================== NOCLIP & INF JUMP ====================
+local noclipConn, infJumpConn
+
+local function toggleNoclip(state)
+    if state then
+        noclipConn = RunService.Stepped:Connect(function()
+            local char = player.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end
+        end)
+    else
+        if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+        local char = player.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end
+    end
+end
+
+local function toggleInfJump(state)
+    if state then
+        infJumpConn = UserInputService.JumpRequest:Connect(function()
+            local hum = player.Character and player.Character:FindFirstChild("Humanoid")
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+        end)
+    else
+        if infJumpConn then infJumpConn:Disconnect() infJumpConn = nil end
+    end
+end
+
+-- ==================== SHOOT MURDERER ====================
+local function shootMurder()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            if plr.Character:FindFirstChild("Knife") or plr.Backpack:FindFirstChild("Knife") then
+                local gun = player.Character and (player.Character:FindFirstChild("Gun") or player.Backpack:FindFirstChild("Gun"))
+                if gun then
+                    gun:Activate()
+                    StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "Shot at "..plr.Name, Duration = 3})
+                    return
+                end
+            end
+        end
+    end
+    StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "No Murderer found!", Duration = 4})
+end
+
+-- ==================== TP TO GUN ====================
+local function tpToGun()
+    local gun = Workspace:FindFirstChild("GunDrop", true) or Workspace:FindFirstChild("Gun", true)
+    if gun and gun:IsA("BasePart") then
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then root.CFrame = gun.CFrame + Vector3.new(0, 8, 0) end
+    else
+        StarterGui:SetCore("SendNotification", {Title = "AG MM2", Text = "Gun not dropped yet!", Duration = 5})
+    end
+end
+
+-- ==================== TOGGLES ====================
+local y = 70
+local function createToggle(name, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 0, 65)
+    frame.Position = UDim2.new(0, 10, 0, y)
+    frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    frame.Parent = MainPanel
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+    local label = Instance.new("TextLabel")
+    label.Text = name
+    label.Size = UDim2.new(0.65, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.new(1,1,1)
+    label.TextSize = 20
+    label.Parent = frame
+
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0, 100, 0, 45)
+    toggle.Position = UDim2.new(1, -115, 0.5, -22.5)
+    toggle.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    toggle.Text = "OFF"
+    toggle.TextColor3 = Color3.new(1,1,1)
+    toggle.TextSize = 18
+    toggle.Parent = frame
+    Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 10)
+
+    local enabled = false
+    toggle.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        toggle.Text = enabled and "ON" or "OFF"
+        toggle.BackgroundColor3 = enabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
+        callback(enabled)
+    end)
+
+    y = y + 75
+end
+
+createToggle("ESP", function(state)
+    if state then
+        updateESP()
+        espConn = RunService.RenderStepped:Connect(updateESP)
+    else
+        if espConn then espConn:Disconnect() end
+        for _, hl in pairs(highlights) do if hl then hl:Destroy() end end
+        highlights = {}
     end
 end)
 
-print("✅ MM2 AG Hub ready. Use the GUI.")
+createToggle("Shoot Murder Button", function(state)
+    if state then
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 260, 0, 85)
+        btn.Position = UDim2.new(0.5, -130, 0.35, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+        btn.Text = "🔫 SHOOT MURDER"
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.TextScaled = true
+        btn.Font = Enum.Font.GothamBold
+        btn.Parent = sg
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 16)
+        makeDraggable(btn)
+        btn.MouseButton1Click:Connect(shootMurder)
+    end
+end)
+
+createToggle("TP to Gun Button", function(state)
+    if state then
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 260, 0, 85)
+        btn.Position = UDim2.new(0.5, -130, 0.35, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+        btn.Text = "🔫 TP TO GUN"
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.TextScaled = true
+        btn.Font = Enum.Font.GothamBold
+        btn.Parent = sg
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 16)
+        makeDraggable(btn)
+        btn.MouseButton1Click:Connect(tpToGun)
+    end
+end)
+
+createToggle("Inf Jump", toggleInfJump)
+createToggle("Noclip", toggleNoclip)
+
+StarterGui:SetCore("SendNotification", {
+    Title = "AG MM2 v5",
+    Text = "Loaded with YARHM-style ESP & tools!",
+    Duration = 8
+})
