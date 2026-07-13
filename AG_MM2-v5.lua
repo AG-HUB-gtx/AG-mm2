@@ -1,4 +1,4 @@
--- AG MM2 v5 - Full ESP + Shoot + TP
+-- AG MM2 v5 - Full YARHM ESP + Shoot + TP (Fixed GUI)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -81,7 +81,7 @@ end
 makeDraggable(AGButton)
 makeDraggable(TopBar)
 
--- ==================== ESP (Full) ====================
+-- ==================== ESP ====================
 local highlights = {}
 local espConn
 local playerData = {}
@@ -312,6 +312,6 @@ createToggle("Noclip", toggleNoclip)
 
 StarterGui:SetCore("SendNotification", {
     Title = "AG MM2 v5",
-    Text = "Full ESP + Shoot + TP loaded!",
+    Text = "Full features loaded!",
     Duration = 8
 })
