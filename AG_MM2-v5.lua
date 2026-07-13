@@ -1,4 +1,4 @@
--- AG MM2 v5 - YARHM Enhanced ESP + Gun TP
+-- AG MM2 v5 - Enhanced ESP + Gun TP
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
