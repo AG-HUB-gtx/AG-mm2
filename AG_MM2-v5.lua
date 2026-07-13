@@ -1,4 +1,4 @@
--- AG MM2 v5 - Full YARHM ESP + Shoot + TP (Fixed GUI)
+-- AG MM2 v5 - YARHM ESP + Shoot + TP (Fixed GUI)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
