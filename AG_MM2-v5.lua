@@ -1,4 +1,4 @@
--- AG MM2 v5 - YARHM ESP + Shoot + TP (Fixed GUI)
+-- AG MM2 v5 - Fixed Panel + Clean Features
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -81,7 +81,7 @@ end
 makeDraggable(AGButton)
 makeDraggable(TopBar)
 
--- ==================== ESP ====================
+-- ==================== Role ESP ====================
 local highlights = {}
 local espConn
 local playerData = {}
@@ -148,7 +148,7 @@ local function updateESP()
     end
 end
 
--- ==================== SHOOT MURDER ====================
+-- ==================== Shoot Murder ====================
 local function shootMurder()
     local murderer = nil
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -171,7 +171,7 @@ local function shootMurder()
     end
 end
 
--- ==================== TP TO GUN ====================
+-- ==================== TP to Gun ====================
 local function tpToGun()
     local gun = Workspace:FindFirstChild("GunDrop", true)
     if gun and gun:IsA("BasePart") then
@@ -223,7 +223,7 @@ local function toggleInfJump(state)
     end
 end
 
--- ==================== TOGGLES ====================
+-- ==================== TOGGLES (Fixed) ====================
 local y = 70
 local function createToggle(name, callback)
     local frame = Instance.new("Frame")
@@ -262,6 +262,7 @@ local function createToggle(name, callback)
     y = y + 75
 end
 
+-- Add Toggles
 createToggle("Role ESP", function(state)
     if state then
         updateESP()
@@ -312,6 +313,6 @@ createToggle("Noclip", toggleNoclip)
 
 StarterGui:SetCore("SendNotification", {
     Title = "AG MM2 v5",
-    Text = "Full features loaded!",
+    Text = "Panel fixed! Toggle features ON",
     Duration = 8
 })
