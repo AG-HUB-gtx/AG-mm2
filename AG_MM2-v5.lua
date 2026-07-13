@@ -1,4 +1,4 @@
--- AG MM2 v5 - Fixed Panel + Clean Features
+-- AG MM2 v5 - FIXED PANEL (Scrolling + Force Visible)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -81,6 +81,19 @@ end
 makeDraggable(AGButton)
 makeDraggable(TopBar)
 
+-- Scrolling Area for Toggles
+local Scrolling = Instance.new("ScrollingFrame")
+Scrolling.Size = UDim2.new(1, -20, 1, -70)
+Scrolling.Position = UDim2.new(0, 10, 0, 60)
+Scrolling.BackgroundTransparency = 1
+Scrolling.ScrollBarThickness = 6
+Scrolling.Parent = MainPanel
+
+local UIList = Instance.new("UIListLayout")
+UIList.Padding = UDim.new(0, 10)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+UIList.Parent = Scrolling
+
 -- ==================== Role ESP ====================
 local highlights = {}
 local espConn
@@ -121,7 +134,6 @@ local function updateESP()
         end
     end
 
-    -- Gun Drop
     local gunDrop = Workspace:FindFirstChild("GunDrop", true)
     if gunDrop then
         local hl = Instance.new("Highlight")
@@ -133,7 +145,6 @@ local function updateESP()
         table.insert(highlights, hl)
     end
 
-    -- Traps
     for _, trap in ipairs(Workspace:GetDescendants()) do
         if trap.Name == "Trap" and (trap.Parent:IsA("Folder") or trap.Parent:IsA("Model")) then
             trap.Transparency = 0
@@ -223,14 +234,12 @@ local function toggleInfJump(state)
     end
 end
 
--- ==================== TOGGLES (Fixed) ====================
-local y = 70
+-- ==================== TOGGLES ====================
 local function createToggle(name, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -20, 0, 65)
-    frame.Position = UDim2.new(0, 10, 0, y)
+    frame.Size = UDim2.new(1, 0, 0, 65)
     frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    frame.Parent = MainPanel
+    frame.Parent = Scrolling
     Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
     local label = Instance.new("TextLabel")
@@ -258,8 +267,6 @@ local function createToggle(name, callback)
         toggle.BackgroundColor3 = enabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(170, 0, 0)
         callback(enabled)
     end)
-
-    y = y + 75
 end
 
 -- Add Toggles
@@ -311,8 +318,10 @@ end)
 createToggle("Inf Jump", toggleInfJump)
 createToggle("Noclip", toggleNoclip)
 
+Scrolling.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+
 StarterGui:SetCore("SendNotification", {
     Title = "AG MM2 v5",
-    Text = "Panel fixed! Toggle features ON",
-    Duration = 8
+    Text = "Panel fixed! Open AG button and toggle features.",
+    Duration = 10
 })
